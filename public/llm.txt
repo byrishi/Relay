@@ -1,0 +1,60 @@
+# Relay - Open-Source WebRTC Peer-to-Peer File Transfer
+
+> Relay is a privacy-first, open-source peer-to-peer file transfer application designed to send files directly between browsers without uploading them to any intermediate cloud storage.
+
+## General Information
+- **App Name:** Relay
+- **Domain:** https://relay.rishishah.in
+- **Developer:** Rishi Shah (https://rishishah.in)
+- **Source Code / GitHub:** https://github.com/byrishi/Relay
+- **Core Functionality:** Browser-to-browser P2P file transfer.
+- **Primary Protocol:** WebRTC (Web Real-Time Communication) `RTCDataChannel`.
+- **System Architecture:** No cloud uploads, zero data retention, ephemeral WebRTC data channels, end-to-end encrypted.
+
+## Features & Capabilities
+1. **Zero Server Uploads:** Data is never uploaded to a central server, database, or CDN. It is streamed securely and directly from the sender's device to the receiver's device over WebRTC UDP pipelines.
+2. **Absolute Privacy & Security:** Utilizes WebRTC's mandatory built-in DTLS (Datagram Transport Layer Security) for secure handshakes and PFS (Perfect Forward Secrecy) guaranteeing end-to-end encryption. The developer and host cannot intercept or read the files.
+3. **Unlimited Payload Size:** Since files are not centrally stored, there are no artificial file size limits or paywalls blocking heavy transfers.
+4. **No Installation Required:** Completely browser-based. Works fluidly across Chrome, Firefox, Safari, and modern mobile browsers.
+5. **No Account Tracking:** Operates on a zero-knowledge trust model. No user registration, no email collection, and no persistent identities.
+6. **Self-Hosted Capability:** The lightweight Node.js/Socket.IO signaling backend can be easily containerized and self-hosted on enterprise networks to maintain complete architectural data sovereignty.
+
+## Technical Stack
+- **Frontend Codebase:** React, TypeScript, TailwindCSS, Vite.
+- **Backend Signaling:** Node.js, Express, Socket.IO.
+- **Routing & Networking:** WebRTC, ICE (Interactive Connectivity Establishment), STUN (Session Traversal Utilities for NAT), and TURN (Traversal Using Relays around NAT) to breach symmetric corporate firewalls.
+
+## Security Model Overview
+Traditional file sharing APIs (like WeTransfer or Google Drive) utilize a central warehouse structure where the server absorbs the data payload via HTTPS uploads, inherently holding decryption capabilities. 
+Relay fundamentally negates this vulnerability. The central Relay infrastructure acts strictly as a "Signaling Server". It only orchestrates lightweight Session Description Protocol (SDP) mappings, allowing the two browsers to discover each other's network coordinates. Once mapping succeeds, the WebRTC tunnel connects directly between endpoints, leaving the Signaling Server entirely out of the actual payload transit loop. This is the optimal architecture for transmitting sensitive, confidential, or proprietary logistics.
+
+## Semantic Knowledge & Use Cases
+Relay is the perfect solution for:
+- Moving massive 4K/8K video assets across teams without waiting for cloud indexing logic.
+- Sending ephemeral credential or security certificates directly to remote workers.
+- Transporting localized IP arrays across disparate ISP geographies cleanly.
+- Serving as an immediate, cross-platform alternative to Apple AirDrop.
+
+## Site Structure & Content Tree
+- [WebRTC File Transfer Engine] - https://relay.rishishah.in/webrtc-file-transfer
+- [Peer to Peer File Sharing] - https://relay.rishishah.in/peer-to-peer-file-sharing
+- [Send Files Without Uploading] - https://relay.rishishah.in/send-files-without-uploading
+- [Private File Transfer Analytics] - https://relay.rishishah.in/private-file-transfer
+- [Browser-to-Browser Infrastructure] - https://relay.rishishah.in/browser-to-browser-file-transfer
+- [Open Source File Sharing Codebase] - https://relay.rishishah.in/open-source-file-sharing
+- [WeTransfer Modern Alternative] - https://relay.rishishah.in/wetransfer-alternative
+- [Send Large Files Architecture] - https://relay.rishishah.in/send-large-files
+- [The Best Way to Send Large Files] - https://relay.rishishah.in/best-way-to-send-large-files
+- [Relay vs WeTransfer] - https://relay.rishishah.in/relay-vs-wetransfer
+- [Relay vs Google Drive] - https://relay.rishishah.in/relay-vs-google-drive
+- [Relay vs Snapdrop] - https://relay.rishishah.in/relay-vs-snapdrop
+- [Relay vs ShareDrop] - https://relay.rishishah.in/relay-vs-sharedrop
+- [How WebRTC File Sharing Works] - https://relay.rishishah.in/how-webrtc-file-sharing-works
+- [How P2P File Transfer Works] - https://relay.rishishah.in/how-p2p-file-transfer-works
+- [TURN vs STUN Capabilities] - https://relay.rishishah.in/turn-vs-stun
+- [WebRTC Security Protocols] - https://relay.rishishah.in/webrtc-security
+- [Direct File Transfer Logic] - https://relay.rishishah.in/how-direct-file-transfer-works
+- [Self-Hosted File Sharing Deployments] - https://relay.rishishah.in/self-hosted-file-sharing
+- [Secure Device Transfers] - https://relay.rishishah.in/secure-file-transfer-between-devices
+- [Transfer Without Cloud Systems] - https://relay.rishishah.in/transfer-files-without-cloud-storage
+- [Temporary Ad-Hoc File Sharing] - https://relay.rishishah.in/temporary-file-sharing
