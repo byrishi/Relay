@@ -3,7 +3,7 @@
 > Minimal, privacy-focused peer-to-peer file transfer built with WebRTC.
 
 <p align="center">
-  <img src="./public/logo.png" alt="Relay Logo" width="120" />
+<img width="350" height="350" alt="relay-wordmark" src="https://github.com/user-attachments/assets/e4183387-1376-4148-95d5-6e14733b9982" />
 </p>
 
 <p align="center">
@@ -36,6 +36,13 @@ Relay focuses on:
 - simple self-hosting
 
 Unlike traditional upload-based platforms, Relay avoids storing user files on the server.
+
+---
+
+# Screenshots
+<img width="1907" height="3748" alt="screencapture-relay-rishishah-in-2026-05-24-22_52_01" src="https://github.com/user-attachments/assets/e3ff4836-894c-4afd-853b-ea7f7a2d5b37" />
+<img width="1907" height="3345" alt="screencapture-relay-rishishah-in-2026-05-24-22_55_53" src="https://github.com/user-attachments/assets/2faae0d7-b7e7-4ee8-ae6b-406899d0aeed" />
+
 
 ---
 
@@ -352,21 +359,6 @@ Relay intentionally prioritizes:
 - lightweight deployment
 
 The goal is to build a focused, self-hostable transfer tool that remains easy to understand and maintain.
-
----
-
-# Roadmap
-
-## Planned Features
-
-- TURN relay support
-- Resumable transfers
-- Transfer verification
-- Improved mobile support
-- PWA support
-- Better peer diagnostics
-- Multi-peer rooms
-- Improved recovery handling
 
 ---
 
