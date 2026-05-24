@@ -1,10 +1,9 @@
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/byrishi/Relay)
 # Relay
-
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/byrishi/Relay)
 > Minimal, privacy-focused peer-to-peer file transfer built with WebRTC.
 
 <p align="center">
-<img width="250" height="200" alt="relay-wordmark" src="https://github.com/user-attachments/assets/e4183387-1376-4148-95d5-6e14733b9982" />
+<img width="250" height="250" alt="relay-wordmark" src="https://github.com/user-attachments/assets/e4183387-1376-4148-95d5-6e14733b9982" />
 </p>
 
 <p align="center">
@@ -20,8 +19,6 @@
   <a href="#security--privacy"><strong>Security</strong></a> ·
   <a href="#limitations"><strong>Limitations</strong></a>
 </p>
-
----
 
 # What is Relay?
 
