@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Geist Sans';
+  src: url('../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Geist Pixel Square';
+  src: url('../node_modules/geist/dist/fonts/geist-pixel/GeistPixel-Square.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Grid';
+  src: url('../node_modules/geist/dist/fonts/geist-pixel/GeistPixel-Grid.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Circle';
+  src: url('../node_modules/geist/dist/fonts/geist-pixel/GeistPixel-Circle.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Triangle';
+  src: url('../node_modules/geist/dist/fonts/geist-pixel/GeistPixel-Triangle.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Line';
+  src: url('../node_modules/geist/dist/fonts/geist-pixel/GeistPixel-Line.woff2') format('woff2');
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-pixel-square: "Geist Pixel Square", monospace;
+  --font-pixel-grid: "Geist Pixel Grid", monospace;
+  --font-pixel-circle: "Geist Pixel Circle", monospace;
+  --font-pixel-triangle: "Geist Pixel Triangle", monospace;
+  --font-pixel-line: "Geist Pixel Line", monospace;
+  
+  --color-surface: #2E4765;
+  --color-surface-hover: #3E5E85;
+  --color-surface-border: rgba(255, 255, 255, 0.2);
+  
+  --color-brand-neon: #D0E2F4;
+  --color-brand-neon-dim: rgba(208, 226, 244, 0.1);
+  --color-brand-accent: #FFFFFF;
+}
+
+@keyframes aurora {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(2%, -2%) scale(1.05); }
+  66% { transform: translate(-2%, 2%) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.animate-aurora {
+  animation: aurora 25s ease-in-out infinite alternate;
+}
+
+body {
+  @apply bg-surface text-white font-sans antialiased overflow-x-hidden selection:bg-brand-neon/30 selection:text-white;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
