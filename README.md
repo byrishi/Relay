@@ -1,5 +1,12 @@
 # Relay
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/byrishi/Relay)
+<a href="https://peerlist.io/rishhishah/project/relay" target="_blank" rel="noreferrer">
+				<img
+					src="https://peerlist.io/api/v1/projects/embed/PRJH6A7EDKK7QNB9MI99JDGADGN7RN?showUpvote=true&theme=dark"
+					alt="Relay"
+					style="width: auto; height: 72px;"
+				/>
+			</a>
 > Minimal, privacy-focused peer-to-peer file transfer built with WebRTC.
 
 <p align="center">
