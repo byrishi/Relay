@@ -1,5 +1,6 @@
 # Relay
 			
+[![Better Stack Badge](https://uptime.betterstack.com/status-badges/v1/monitor/2nokn.svg)](https://uptime.betterstack.com/?utm_source=status_badge)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/byrishi/Relay)
 
 <a href="https://peerlist.io/rishhishah/project/relay" target="_blank" rel="noreferrer">
