@@ -12,6 +12,8 @@ export const atmosphere = {
   pulse: 0,
   /** Number of peers shown as luminous nodes in connected mode. */
   peers: 1,
+  /** User turned the background animation off: draw one still frame. */
+  still: (() => { try { return localStorage.getItem('relay-motion') === 'off'; } catch { return false; } })(),
 };
 
 export function setAtmosphere(patch: Partial<typeof atmosphere>) {

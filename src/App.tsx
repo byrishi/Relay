@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { MotionConfig } from 'motion/react';
 import { ShieldCheck, Menu, X, BookOpen } from 'lucide-react';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
@@ -12,6 +13,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Atmosphere from './components/Atmosphere';
 import { applyHead } from './content/head';
 import { HOME, SITE } from './content/site';
+import { atmosphere, setAtmosphere } from './lib/atmosphere';
 
 // Articles and content pages (markdown) load on demand, keeping the app bundle small.
 const DocRoute = lazy(() => import('./pages/Docs').then((m) => ({ default: m.DocRoute })));
@@ -72,20 +74,35 @@ const FOOTER: { title: string; links: [string, string][] }[] = [
   ] },
 ];
 
+function MotionToggle() {
+  const [still, setStill] = useState(atmosphere.still);
+  const toggle = () => {
+    const v = !still;
+    setStill(v);
+    setAtmosphere({ still: v });
+    try { localStorage.setItem('relay-motion', v ? 'off' : 'on'); } catch { /* ignore */ }
+  };
+  return (
+    <button onClick={toggle} aria-pressed={!still} className="hover:text-white underline underline-offset-2">
+      Background animation: {still ? 'off' : 'on'}
+    </button>
+  );
+}
+
 function Footer() {
   return (
     <footer className="w-full max-w-[100vw] relative bg-[#03040a]/70 backdrop-blur-2xl pt-16 md:pt-24 mt-auto z-10 flex flex-col border-t border-surface-border">
       <div className="w-full max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 mb-16 md:mb-24">
         {FOOTER.map((col) => (
           <div key={col.title} className="flex flex-col gap-4">
-            <h4 className="text-white font-pixel-line uppercase tracking-widest text-lg">{col.title}</h4>
+            <h2 className="text-white font-pixel-line uppercase tracking-widest text-lg">{col.title}</h2>
             <ul className="flex flex-col gap-2.5 text-sm text-white/55">
               {col.links.map(([to, label]) => <li key={to}><Link to={to} className="hover:text-white transition-colors">{label}</Link></li>)}
             </ul>
           </div>
         ))}
         <div className="flex flex-col gap-4">
-          <h4 className="text-white font-pixel-line uppercase tracking-widest text-lg">Open source</h4>
+          <h2 className="text-white font-pixel-line uppercase tracking-widest text-lg">Open source</h2>
           <ul className="flex flex-col gap-2.5 text-sm text-white/55">
             <li><a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-white">Source code on GitHub</a></li>
             <li><Link to="/self-hosted-file-sharing" className="hover:text-white">Self-host Relay</Link></li>
@@ -104,8 +121,9 @@ function Footer() {
         </svg>
       </div>
 
-      <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-xs text-white/35 pb-6 pt-6 px-6 gap-4">
+      <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-xs text-white/60 pb-6 pt-6 px-6 gap-4">
         <span>© 2026 Relay · MIT licensed · Files go device to device, never through our servers.</span>
+        <MotionToggle />
         <span>Built by <a href={SITE.author.url} target="_blank" rel="noopener noreferrer" className="text-white hover:text-brand-neon border-b border-white/20 pb-0.5">{SITE.author.name}</a></span>
       </div>
     </footer>
@@ -122,11 +140,13 @@ function HomeRoute() {
 export default function App() {
   const fonts = [GeistSans, GeistMono, GeistPixelSquare, GeistPixelGrid, GeistPixelCircle, GeistPixelTriangle, GeistPixelLine].map((f) => f.variable).join(' ');
   return (
+    <MotionConfig reducedMotion="user">
     <div className={`min-h-screen relative flex flex-col font-sans text-white bg-[#03040a] selection:bg-brand-neon/30 selection:text-white overflow-x-hidden w-full max-w-[100vw] ${fonts}`}>
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-white focus:text-black focus:font-semibold">Skip to content</a>
       <ScrollToTop />
       <Atmosphere />
       <Header />
-      <main className="flex-1 flex flex-col relative z-10 pt-20 md:pt-24">
+      <main id="main" tabIndex={-1} className="flex-1 flex flex-col relative z-10 pt-20 md:pt-24 outline-none">
         <Suspense fallback={<div className="min-h-[60vh]" />}>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
@@ -139,5 +159,6 @@ export default function App() {
       </main>
       <Footer />
     </div>
+    </MotionConfig>
   );
 }

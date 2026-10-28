@@ -157,7 +157,7 @@ const card = 'block p-5 rounded-xl bg-[#070a16]/60 border border-white/[0.08] ho
 
 function relatedHtml(related: Doc[]) {
   if (!related.length) return '';
-  return `<nav aria-label="Related guides" class="mt-16"><h2 class="text-sm uppercase tracking-[0.2em] text-white/50 font-pixel-grid mb-5">Related guides</h2>
+  return `<nav aria-label="Related guides" class="mt-16"><h2 class="text-sm uppercase tracking-[0.2em] text-white/65 font-pixel-grid mb-5">Related guides</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${related.map((d) => `<a href="/${d.slug}" data-internal="true" class="${card}"><span class="text-[10px] uppercase tracking-[0.2em] text-brand-neon/80">${esc(d.category)}</span><span class="block text-white font-semibold mt-1">${esc(d.h1)}</span><span class="block text-white/55 text-sm mt-1">${esc(d.description)}</span></a>`).join('')}</div></nav>`;
 }
 
@@ -168,10 +168,10 @@ const ctaHtml = `<aside class="mt-16 p-8 rounded-2xl bg-[#070a16]/60 border bord
 export function renderDocPage(doc: Doc, related: Doc[]): string {
   const isArticle = doc.kind === 'article';
   const crumbs = isArticle
-    ? `<nav aria-label="Breadcrumb" class="text-xs text-white/45 mb-8"><a href="/" data-internal="true" class="hover:text-white">Relay</a> <span aria-hidden="true">/</span> <a href="/articles" data-internal="true" class="hover:text-white">Guides</a> <span aria-hidden="true">/</span> <span class="text-white/70">${esc(doc.category)}</span></nav>`
+    ? `<nav aria-label="Breadcrumb" class="text-xs text-white/60 mb-8"><a href="/" data-internal="true" class="hover:text-white">Relay</a> <span aria-hidden="true">/</span> <a href="/articles" data-internal="true" class="hover:text-white">Guides</a> <span aria-hidden="true">/</span> <span class="text-white/70">${esc(doc.category)}</span></nav>`
     : '';
   const meta = isArticle
-    ? `<p class="text-xs text-white/45 mt-6">By <a href="${SITE.author.url}" rel="author" class="text-white/70 hover:text-white">${esc(SITE.author.name)}</a> · Updated <time datetime="${doc.updated}">${fmtDate(doc.updated)}</time> · ${doc.readingMinutes} min read</p>`
+    ? `<p class="text-xs text-white/60 mt-6">By <a href="${SITE.author.url}" rel="author" class="text-white/70 hover:text-white">${esc(SITE.author.name)}</a> · Updated <time datetime="${doc.updated}">${fmtDate(doc.updated)}</time> · ${doc.readingMinutes} min read</p>`
     : '';
   return `<div class="w-full max-w-3xl mx-auto px-3 md:px-6 py-8 md:py-14"><div class="${PANEL} px-6 md:px-12 py-10 md:py-14 text-white">
 ${crumbs}<header><span class="inline-block px-3 py-1 rounded border border-brand-neon/30 bg-brand-neon/5 text-[10px] tracking-[0.2em] uppercase text-brand-neon font-pixel-grid mb-6">${esc(doc.category)}</span>
@@ -193,7 +193,7 @@ export function renderDocsIndex(articles: Doc[]): string {
 <header class="max-w-3xl"><span class="inline-block px-3 py-1 rounded border border-brand-neon/30 bg-brand-neon/5 text-[10px] tracking-[0.2em] uppercase text-brand-neon font-pixel-grid mb-6">Guides</span>
 <h1 class="text-4xl md:text-5xl font-bold tracking-tight">File sharing guides</h1>
 <p class="text-lg text-white/70 mt-5 leading-relaxed">Plain-language guides to peer-to-peer and secure file transfer, sending large files, and honest comparisons with the tools you already know.</p></header>
-${cats.map((c) => `<section class="mt-14"><h2 class="text-sm uppercase tracking-[0.2em] text-white/50 font-pixel-grid mb-5">${esc(c)}</h2>
+${cats.map((c) => `<section class="mt-14"><h2 class="text-sm uppercase tracking-[0.2em] text-white/65 font-pixel-grid mb-5">${esc(c)}</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${groups.get(c)!.sort((a, b) => a.order - b.order || a.h1.localeCompare(b.h1)).map((d) => `<a href="/${d.slug}" data-internal="true" class="${card}"><span class="block text-white font-semibold">${esc(d.h1)}</span><span class="block text-white/55 text-sm mt-1.5">${esc(d.description)}</span></a>`).join('')}</div></section>`).join('\n')}
 </div></div>`;
 }

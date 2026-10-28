@@ -346,8 +346,16 @@ export default function Atmosphere() {
     let energy = 0, pulse = 0, scroll = 0;
     let raf = 0, last = performance.now(), time = Math.random() * 100;
 
+    let drewStill = false;
+    const onResizeRedraw = () => { drewStill = false; };
+    window.addEventListener('resize', onResizeRedraw);
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
+      // Animation switched off: draw a single still frame and idle (no GPU work).
+      if (atmosphere.still) {
+        if (drewStill) { last = now; return; }
+        drewStill = true;
+      } else drewStill = false;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       time += dt * (reduceMotion ? 0.15 : 1);
@@ -431,6 +439,7 @@ export default function Atmosphere() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', onResizeRedraw);
       window.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('webglcontextlost', onLost);
       scene.forEach(freeTarget); freeTarget(bloomA); freeTarget(bloomB);
