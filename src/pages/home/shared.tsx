@@ -1,7 +1,7 @@
-import { forwardRef, ReactNode, useRef, useState } from 'react';
+import { forwardRef, lazy, ReactNode, Suspense, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Laptop, Smartphone, Tablet, Monitor, X, Plus, FolderUp, ArrowRight, File as FileIcon } from 'lucide-react';
+import { Laptop, Smartphone, Tablet, Monitor, X, Plus, FolderUp, ArrowRight, File as FileIcon, ScanLine } from 'lucide-react';
 import type { Relay, NearbyDevice } from '../../hooks/useRelay';
 import { collectFolderInput, formatBytes, PickedFiles } from '../../components/relay/format';
 
@@ -9,6 +9,9 @@ import { collectFolderInput, formatBytes, PickedFiles } from '../../components/r
 export type Staged = PickedFiles[];
 export const stagedSize = (s: Staged) => s.reduce((a, g) => a + g.files.reduce((b, f) => b + f.size, 0), 0);
 export const stagedCount = (s: Staged) => s.reduce((a, g) => a + g.files.length, 0);
+
+// Loaded only when someone opens it, so the camera code never slows the page down.
+const Scanner = lazy(() => import('../../components/Scanner'));
 
 export interface LandingProps {
   relay: Relay;
@@ -70,6 +73,7 @@ export function StagedList({ staged, onClear }: { staged: Staged; onClear: () =>
 export const AppWindow = forwardRef<HTMLInputElement, LandingProps & { className?: string; heading?: ReactNode }>(function AppWindow({ relay, onStage, className = '', heading }, codeRef) {
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
+  const [scanning, setScanning] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const submit = () => relay.joinRoom(code, relay.needsPassword ? password : undefined);
@@ -109,6 +113,16 @@ export const AppWindow = forwardRef<HTMLInputElement, LandingProps & { className
               <button type="submit" disabled={!code} aria-label="Join with this code" className="key key-light w-[52px] px-0"><ArrowRight className="w-5 h-5" aria-hidden="true" /></button>
             </div>
           </form>
+          <button onClick={() => setScanning(true)} className="hidden pointer-coarse:inline-flex key key-signal mt-3 w-full">
+            <ScanLine className="w-5 h-5" aria-hidden="true" />Scan QR code
+          </button>
+          <AnimatePresence>
+            {scanning && (
+              <Suspense fallback={null}>
+                <Scanner onClose={() => setScanning(false)} onCode={(c) => { setScanning(false); setCode(c); relay.joinRoom(c); }} />
+              </Suspense>
+            )}
+          </AnimatePresence>
           <AnimatePresence>
             {relay.needsPassword && (
               <motion.form initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
