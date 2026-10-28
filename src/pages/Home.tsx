@@ -5,6 +5,7 @@ import { io, Socket } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react';
 import { WebRTCManager, TransferUpdate, TransferStatus, RouteInfo } from '../lib/webrtc';
 import { cn } from '../lib/utils';
+import { setAtmosphere, pulseAtmosphere, speedToEnergy } from '../lib/atmosphere';
 import JSZip from 'jszip';
 
 type AppState = 'LANDING' | 'LOBBY' | 'CONNECTED';
@@ -147,7 +148,10 @@ export default function Home() {
     const per = (peerProgress.current[u.id] ||= {});
     const prevStatus = per[peerId]?.status;
     per[peerId] = u;
-    if (u.direction === 'receive' && u.status === 'completed' && prevStatus !== 'completed') playSuccessSound();
+    if (u.status === 'completed' && prevStatus !== 'completed') {
+      pulseAtmosphere();
+      if (u.direction === 'receive') playSuccessSound();
+    }
 
     const list = Object.values(per) as TransferUpdate[];
     const total = u.size * list.length;
@@ -465,6 +469,16 @@ export default function Home() {
       return acc;
   }, 0);
 
+  // Drive the background scene from real app state.
+  const connectedPeers = (Object.values(peersMap) as { connected: boolean }[]).filter(p => p.connected).length;
+  useEffect(() => {
+    setAtmosphere({ mode: appState === 'CONNECTED' ? 'connected' : appState === 'LOBBY' ? 'lobby' : 'landing', peers: Math.max(1, connectedPeers) });
+  }, [appState, connectedPeers]);
+  useEffect(() => {
+    setAtmosphere({ energy: speedToEnergy(currentSpeedBytes) });
+  }, [currentSpeedBytes]);
+  useEffect(() => () => setAtmosphere({ mode: 'landing', energy: 0 }), []);
+
   return (
     <div 
       className="flex-1 flex flex-col items-center justify-start w-full relative h-full"
@@ -484,8 +498,6 @@ export default function Home() {
               transition={{ duration: 0.4 }}
               className="w-full flex flex-col items-center bg-transparent flex-1 relative overflow-hidden"
             >
-              <div className="absolute top-[-20%] right-[-10%] w-[80vw] h-[80vw] md:w-[40vw] md:h-[40vw] bg-brand-neon/10 blur-[120px] rounded-full pointer-events-none" />
-              <div className="absolute bottom-[10%] left-[-10%] w-[60vw] h-[60vw] md:w-[30vw] md:h-[30vw] bg-emerald-900/10 blur-[100px] rounded-full pointer-events-none" />
               
               {/* HERO */}
               <div className="w-full min-h-[calc(100vh-80px)] md:min-h-[calc(100vh-96px)] flex flex-col justify-center items-center text-center px-4 relative z-10 max-w-5xl mx-auto py-16 md:py-24">
@@ -513,11 +525,11 @@ export default function Home() {
                  
                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-sans font-bold tracking-tighter text-white mb-6 leading-[1.05]">
                    Transfer files directly.<br />
-                   <span className="text-white/30">Without the cloud.</span>
+                   <span className="text-luminous">Without the cloud.</span>
                  </h1>
                  
-                 <p className="text-lg md:text-xl text-white/80 max-w-xl font-sans mb-12 leading-relaxed font-medium mx-auto">
-                   A military-grade encrypted peer-to-peer file transfer engine. No accounts, no size limits, and completely free. Your files go directly from your device to theirs.
+                 <p className="text-lg md:text-xl text-white/85 max-w-xl font-sans mb-12 leading-relaxed font-medium mx-auto [text-shadow:0_1px_18px_rgba(3,4,10,0.95),0_0_2px_rgba(3,4,10,0.9)]">
+                   An end-to-end encrypted, peer-to-peer file transfer engine. No accounts, no size limits, and completely free. Your files go directly from your device to theirs.
                  </p>
                  
                  <div className="w-full max-w-xl flex flex-col sm:flex-row gap-4 items-center">
@@ -605,16 +617,16 @@ export default function Home() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -40 }}
-              className="flex flex-col items-center justify-center w-full max-w-md"
+              className="flex flex-col items-center justify-center w-full max-w-md mx-auto my-auto py-10 px-4"
             >
-              <div className="w-full max-w-sm p-12 bg-surface/60 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col items-center relative rounded-[12px]">
+              <div className="w-full max-w-sm p-12 bg-[#070a16]/60 backdrop-blur-2xl border border-white/[0.08] glow-soft flex flex-col items-center relative rounded-[12px]">
                 <div className="w-16 h-16 bg-white flex items-center justify-center mb-8 rounded-[12px] shadow-sm">
                    <QrCode className="w-8 h-8 text-black" />
                 </div>
 
                 <h2 className="text-xl font-pixel-square text-white mb-2 tracking-tight uppercase">Ready to Connect</h2>
                 <p className="text-white/80 text-center text-sm mb-10 font-sans">
-                  Scan QR or share Code to establish secure AES-256 tunnel.
+                  Scan the QR or share the code. Files travel device to device, end-to-end encrypted.
                 </p>
                 
                 <div className="p-4 bg-white rounded-lg mb-8 group relative overflow-hidden">
@@ -660,7 +672,7 @@ export default function Home() {
               animate={{ opacity: 1 }}
               className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center"
             >
-              <div className="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 bg-surface/60 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] gap-6 rounded-[12px]">
+              <div className="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 bg-[#070a16]/60 backdrop-blur-2xl border border-white/[0.08] glow-soft gap-6 rounded-[12px]">
                 <div className="flex items-center gap-6 w-full md:w-auto">
                   <div className="w-12 h-12 bg-white flex items-center justify-center flex-shrink-0 rounded-[10px] shadow-sm">
                     <ShieldCheck className="w-6 h-6 text-black" />
@@ -705,6 +717,20 @@ export default function Home() {
                 </button>
               </div>
 
+              {/* Live throughput readout — mirrors the light stream in the background */}
+              <div className="w-full flex flex-col items-center py-6 select-none relative" aria-live="polite">
+                <div aria-hidden className="absolute inset-x-[15%] inset-y-0 -z-10 rounded-full bg-[radial-gradient(closest-side,rgba(3,4,10,0.75),transparent)] blur-xl" />
+                <span className={cn(
+                  "font-pixel-square tracking-tight tabular-nums text-5xl md:text-7xl transition-opacity duration-700",
+                  currentSpeedBytes > 0 ? "text-luminous opacity-100" : "text-white/20 opacity-80"
+                )}>
+                  {currentSpeedBytes > 0 ? formatBytes(currentSpeedBytes, 1) + '/s' : 'IDLE'}
+                </span>
+                <span className="mt-3 text-[10px] font-pixel-grid uppercase tracking-[0.3em] text-white/40 animate-breathe">
+                  {currentSpeedBytes > 0 ? 'streaming peer to peer' : 'link open · drop files to send'}
+                </span>
+              </div>
+
               {Object.keys(transfers).length > 0 && (
                 <div className="w-full flex flex-col mt-2 mb-6">
                   <h4 className="text-[10px] uppercase text-brand-neon tracking-[0.2em] font-pixel-grid mb-4 text-center pb-2 border-b border-white/5">Active Transfers</h4>
@@ -714,8 +740,8 @@ export default function Home() {
                         key={task.id}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={cn("bg-surface border p-4 rounded-xl flex flex-col gap-4 relative overflow-hidden group transition-all mb-3 w-full shadow-lg", 
-                           ['cancelled', 'failed'].includes(task.status) ? 'border-red-500/30' : 'border-brand-neon/30 hover:border-brand-neon/60 bg-brand-neon/5')}
+                        className={cn("bg-[#070a16]/65 backdrop-blur-xl border p-4 rounded-xl flex flex-col gap-4 relative overflow-hidden group transition-all mb-3 w-full shadow-lg", 
+                           ['cancelled', 'failed'].includes(task.status) ? 'border-red-500/30' : 'border-brand-neon/25 hover:border-brand-neon/50')}
                       >
                         <div className="flex items-center justify-between z-10 relative flex-wrap gap-4">
                           <div className="flex items-center gap-4 overflow-hidden max-w-full">
@@ -751,7 +777,7 @@ export default function Home() {
                                    {task.status === 'failed' && task.error ? `failed: ${task.error}` : task.status}
                                    {['transferring', 'paused'].includes(task.status) ? ` (${task.progress.toFixed(task.progress < 10 ? 1 : 0)}%)` : ''}
                                 </span>
-                                <span>{task.isSending ? 'Sending' : 'Receiving'}</span>
+                                <span>{task.status === 'completed' ? (task.isSending ? 'Sent' : 'Received') : (task.isSending ? 'Sending' : 'Receiving')}</span>
                                 {task.status === 'completed' && task.avgSpeed ? <span>avg {formatBytes(task.avgSpeed)}/s</span> : null}
                               </div>
                             </div>
@@ -832,7 +858,7 @@ export default function Home() {
 
               <div 
                  onClick={() => fileInputRef.current?.click()}
-                 className="relative group w-full aspect-video md:aspect-[3/1] border border-surface-border border-dashed hover:border-brand-neon bg-surface/50 hover:bg-white/5 backdrop-blur-md rounded-[12px] transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden"
+                 className="relative group w-full aspect-video md:aspect-[3/1] border border-white/[0.12] border-dashed hover:border-brand-neon/70 bg-[#070a16]/45 hover:bg-[#070a16]/30 backdrop-blur-md glow-soft rounded-[12px] transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden"
               >
                 <div className="w-16 h-16 bg-white/5 group-hover:bg-white group-hover:scale-110 transition-all duration-300 flex items-center justify-center mb-4 relative z-10 rounded-[12px]">
                    <UploadCloud className="w-6 h-6 text-white group-hover:text-black transition-colors" />
@@ -851,7 +877,7 @@ export default function Home() {
                 />
               </div>
 
-              <form onSubmit={handleSendText} className="flex items-center bg-surface/60 backdrop-blur-2xl border border-white/10 shadow-xl rounded-[10px] overflow-hidden">
+              <form onSubmit={handleSendText} className="flex items-center bg-[#070a16]/60 backdrop-blur-2xl border border-white/[0.08] glow-soft rounded-[10px] overflow-hidden">
                  <div className="flex items-center justify-center w-12 h-12 bg-white/5 border-r border-surface-border">
                     <MessageSquare className="w-5 h-5 text-white/50" />
                  </div>

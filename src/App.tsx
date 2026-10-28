@@ -42,6 +42,7 @@ import TransferWithoutCloud from "./pages/seo/TransferWithoutCloud";
 import TemporaryFileSharing from "./pages/seo/TemporaryFileSharing";
 import VerifyIdentity from "./pages/VerifyIdentity";
 import AIFooter from "./components/AIFooter";
+import Atmosphere from "./components/Atmosphere";
 import ScrollToTop from "./components/ScrollToTop";
 
 function Header() {
@@ -51,7 +52,7 @@ function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full h-20 md:h-24 px-4 md:px-8 flex items-center justify-between z-50 backdrop-blur-xl bg-surface/50 border-b border-surface-border shadow-sm ${GeistSans.variable} ${GeistMono.variable}`}
+        className={`fixed top-0 left-0 w-full h-20 md:h-24 px-4 md:px-8 flex items-center justify-between z-50 backdrop-blur-xl bg-[#05070f]/40 border-b border-white/[0.06] ${GeistSans.variable} ${GeistMono.variable}`}
       >
         <Link
           to="/"
@@ -137,24 +138,10 @@ function Header() {
 export default function App() {
   return (
     <div
-      className={`min-h-screen relative flex flex-col font-sans text-white bg-surface selection:bg-brand-neon/30 selection:text-white overflow-x-hidden w-full max-w-[100vw] ${GeistSans.variable} ${GeistMono.variable} ${GeistPixelSquare.variable} ${GeistPixelGrid.variable} ${GeistPixelCircle.variable} ${GeistPixelTriangle.variable} ${GeistPixelLine.variable}`}
+      className={`min-h-screen relative flex flex-col font-sans text-white bg-[#03040a] selection:bg-brand-neon/30 selection:text-white overflow-x-hidden w-full max-w-[100vw] ${GeistSans.variable} ${GeistMono.variable} ${GeistPixelSquare.variable} ${GeistPixelGrid.variable} ${GeistPixelCircle.variable} ${GeistPixelTriangle.variable} ${GeistPixelLine.variable}`}
     >
       <ScrollToTop />
-      {/* Premium Grain Texture Overlay */}
-      <div
-        className="fixed inset-0 z-0 pointer-events-none opacity-[0.15]"
-        style={{
-          backgroundImage:
-            'url("data:image/svg+xml,%3Csvg viewBox=%220 0 400 400%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")',
-          mixBlendMode: "soft-light",
-        }}
-      ></div>
-      <div className="fixed inset-0 z-0 pointer-events-none bg-[#F5F2EB] opacity-[0.02] mix-blend-color-burn"></div>
-      <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50 blur-3xl animate-aurora"></div>
-      <div
-        className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-brand-neon/10 via-transparent to-transparent opacity-50 blur-3xl animate-aurora"
-        style={{ animationDelay: "-12.5s" }}
-      ></div>
+      <Atmosphere />
       <Header />
       <div className="flex-1 flex flex-col relative z-10 pt-20 md:pt-24">
         <Routes>
@@ -189,7 +176,7 @@ export default function App() {
         </Routes>
       </div>
 
-      <footer className="w-full max-w-[100vw] relative bg-surface/50 backdrop-blur-lg pt-16 md:pt-24 mt-auto z-10 flex flex-col border-t border-surface-border shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+      <footer className="w-full max-w-[100vw] relative bg-[#03040a]/70 backdrop-blur-2xl pt-16 md:pt-24 mt-auto z-10 flex flex-col border-t border-surface-border shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <div className="w-full max-w-7xl mx-auto px-6 relative z-10 flex flex-col md:flex-row justify-between items-start gap-12 mb-12 md:mb-32">
           <div className="flex flex-col gap-6 max-w-sm">
             <h4 className="text-white font-pixel-line uppercase tracking-widest text-lg mb-2">

@@ -50,13 +50,15 @@
   --font-pixel-triangle: "Geist Pixel Triangle", monospace;
   --font-pixel-line: "Geist Pixel Line", monospace;
   
-  --color-surface: #2E4765;
-  --color-surface-hover: #3E5E85;
-  --color-surface-border: rgba(255, 255, 255, 0.2);
-  
-  --color-brand-neon: #D0E2F4;
-  --color-brand-neon-dim: rgba(208, 226, 244, 0.1);
+  --color-surface: #0A0E1C;
+  --color-surface-hover: #141a30;
+  --color-surface-border: rgba(214, 228, 255, 0.10);
+
+  --color-brand-neon: #D9F5EC;
+  --color-brand-neon-dim: rgba(217, 245, 236, 0.1);
   --color-brand-accent: #FFFFFF;
+  --color-brand-peach: #FFC9A8;
+  --color-brand-lilac: #C3B6FF;
 }
 
 @keyframes aurora {
@@ -69,6 +71,19 @@
 .animate-aurora {
   animation: aurora 25s ease-in-out infinite alternate;
 }
+
+/* luminous text: soft bloom halo around headline type */
+.text-luminous {
+  background: linear-gradient(100deg, #fff8ee 0%, #d9f5ec 35%, #c3b6ff 70%, #ffc9a8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px rgba(195, 182, 255, 0.35)) drop-shadow(0 0 2px rgba(255, 248, 238, 0.4));
+}
+.glow-soft { box-shadow: 0 0 0 1px rgba(214, 228, 255, 0.06), 0 20px 60px -20px rgba(120, 110, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+@keyframes breathe { 0%,100% { opacity: .55 } 50% { opacity: 1 } }
+.animate-breathe { animation: breathe 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .animate-breathe { animation: none; } }
 
 body {
   @apply bg-surface text-white font-sans antialiased overflow-x-hidden selection:bg-brand-neon/30 selection:text-white;
