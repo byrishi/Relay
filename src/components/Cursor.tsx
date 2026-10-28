@@ -1,86 +1,133 @@
 import { useEffect, useRef } from 'react';
 
-const INTERACTIVE = 'a, button, summary, label, [data-cursor], [role="button"]';
+const INTERACTIVE = 'a, button, summary, label, select, [data-cursor], [role="button"], [role="switch"]';
+const FIELD = 'input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea, [contenteditable="true"]';
+const BLUE_SURFACE = '.device, .bg-signal, [data-surface="blue"]';
 
 /**
- * A viewfinder cursor for mouse and trackpad users: a signal square on the
- * pointer, and a bracket frame that trails behind and snaps around whatever
- * you can click. `data-cursor="Label"` on an element shows a label.
- * Not shown on touch screens; the native cursor returns over text fields.
+ * Cursor for mouse and trackpad users.
+ * - A small dot sits exactly on the pointer; a ring follows with a soft spring.
+ * - Over anything you can click, the ring wraps the element, takes its corner
+ *   radius, and leans a little toward the pointer. `data-cursor="Label"` adds
+ *   a label pill.
+ * - Over text fields it steps aside for the normal text cursor.
+ * - Ultramarine on paper, white on the blue app sheet.
+ * - Pressing squeezes it. It sleeps when the pointer is still.
+ * Not shown on touch screens or when reduced motion is requested.
  */
 export default function Cursor() {
+  const root = useRef<HTMLDivElement>(null);
   const dot = useRef<HTMLDivElement>(null);
-  const frame = useRef<HTMLDivElement>(null);
+  const ring = useRef<HTMLDivElement>(null);
   const label = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches || navigator.webdriver) return;
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     document.documentElement.classList.add('has-cursor');
 
-    const pos = { x: -100, y: -100 };
-    const f = { x: -100, y: -100, w: 34, h: 34 };
-    let target: { x: number; y: number; w: number; h: number } | null = null;
-    let text = '';
-    let visible = false;
-    let overField = false;
-    let raf = 0;
+    const SIZE = 30;
+    const p = { x: -100, y: -100 };
+    // ring state + velocity (critically damped spring)
+    const r = { x: -100, y: -100, w: SIZE, h: SIZE, rad: SIZE / 2 };
+    const v = { x: 0, y: 0, w: 0, h: 0 };
+    let target: HTMLElement | null = null;
+    let visible = false, field = false, down = false, blue = false;
+    let raf = 0, last = performance.now(), idle = 0;
+
+    const goal = () => {
+      if (target && target.isConnected) {
+        const b = target.getBoundingClientRect();
+        if (b.width * b.height < 200_000) {
+          const pad = 6;
+          const cs = getComputedStyle(target);
+          const rad = Math.min(parseFloat(cs.borderTopLeftRadius) || 0, b.height / 2) + pad;
+          // lean toward the pointer, a little
+          const lx = (p.x - (b.left + b.width / 2)) * 0.08, ly = (p.y - (b.top + b.height / 2)) * 0.12;
+          return { x: b.left - pad + lx, y: b.top - pad + ly, w: b.width + pad * 2, h: b.height + pad * 2, rad };
+        }
+      }
+      const s = down ? SIZE * 0.7 : SIZE;
+      return { x: p.x - s / 2, y: p.y - s / 2, w: s, h: s, rad: s / 2 };
+    };
+
+    const paint = () => {
+      const o = visible && !field ? '1' : '0';
+      if (dot.current) {
+        dot.current.style.transform = `translate3d(${p.x - 3}px, ${p.y - 3}px, 0) scale(${down ? 0.6 : target ? 0 : 1})`;
+        dot.current.style.opacity = o;
+      }
+      if (ring.current) {
+        ring.current.style.transform = `translate3d(${r.x}px, ${r.y}px, 0)`;
+        ring.current.style.width = `${r.w}px`;
+        ring.current.style.height = `${r.h}px`;
+        ring.current.style.borderRadius = `${r.rad}px`;
+        ring.current.style.opacity = o;
+      }
+      root.current?.setAttribute('data-blue', blue ? '1' : '0');
+      root.current?.setAttribute('data-on', target ? '1' : '0');
+    };
+
+    const tick = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000); last = t;
+      const g = goal();
+      const k = 420, c = 2 * Math.sqrt(k); // stiffness, critical damping
+      let moving = false;
+      (['x', 'y', 'w', 'h'] as const).forEach((key) => {
+        const a = k * (g[key] - r[key]) - c * v[key];
+        v[key] += a * dt; r[key] += v[key] * dt;
+        if (Math.abs(g[key] - r[key]) > 0.1 || Math.abs(v[key]) > 0.1) moving = true;
+      });
+      r.rad += (g.rad - r.rad) * Math.min(1, dt * 18);
+      paint();
+      idle = moving ? 0 : idle + 1;
+      raf = idle > 30 ? 0 : requestAnimationFrame(tick); // sleep when settled
+    };
+    const wake = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
 
     const onMove = (e: PointerEvent) => {
-      pos.x = e.clientX; pos.y = e.clientY;
-      if (!visible) { visible = true; f.x = pos.x - 17; f.y = pos.y - 17; }
-      const el = (e.target as Element | null)?.closest?.(INTERACTIVE) as HTMLElement | null;
-      overField = !!(e.target as Element | null)?.closest?.('input[type="text"], input[type="password"], textarea');
-      if (el && !overField) {
-        const r = el.getBoundingClientRect();
-        target = r.width * r.height < 260_000 ? { x: r.left - 6, y: r.top - 6, w: r.width + 12, h: r.height + 12 } : null;
-        text = el.dataset.cursor || '';
-      } else { target = null; text = ''; }
+      if (e.pointerType === 'touch') return;
+      p.x = e.clientX; p.y = e.clientY;
+      if (!visible) { visible = true; r.x = p.x - SIZE / 2; r.y = p.y - SIZE / 2; }
+      const el = e.target as Element | null;
+      field = !!el?.closest?.(FIELD);
+      blue = !!el?.closest?.(BLUE_SURFACE);
+      const hit = (el?.closest?.(INTERACTIVE) as HTMLElement | null) || null;
+      if (hit !== target) {
+        target = hit;
+        const text = hit?.dataset.cursor || '';
+        if (label.current) { label.current.textContent = text; label.current.dataset.show = text ? '1' : '0'; }
+      }
+      wake();
     };
-    const onLeave = () => { visible = false; };
-    const onDown = () => frame.current?.animate([{ scale: 1 }, { scale: 0.92 }, { scale: 1 }], { duration: 220 });
+    const onDown = () => { down = true; wake(); };
+    const onUp = () => { down = false; wake(); };
+    const onLeave = () => { visible = false; paint(); };
+    const onScroll = () => wake();
 
-    const tick = () => {
-      const k = still ? 1 : 0.22;
-      const t = target ?? { x: pos.x - 17, y: pos.y - 17, w: 34, h: 34 };
-      f.x += (t.x - f.x) * k; f.y += (t.y - f.y) * k; f.w += (t.w - f.w) * k; f.h += (t.h - f.h) * k;
-      const o = visible && !overField ? '1' : '0';
-      if (dot.current) { dot.current.style.transform = `translate3d(${pos.x - 4}px, ${pos.y - 4}px, 0)`; dot.current.style.opacity = o; }
-      if (frame.current) {
-        frame.current.style.transform = `translate3d(${f.x}px, ${f.y}px, 0)`;
-        frame.current.style.width = `${f.w}px`; frame.current.style.height = `${f.h}px`;
-        frame.current.style.opacity = o;
-      }
-      if (label.current) {
-        label.current.textContent = text;
-        label.current.dataset.on = text ? '1' : '0';
-      }
-      raf = requestAnimationFrame(tick);
-    };
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('pointerdown', onDown);
-    document.addEventListener('pointerleave', onLeave);
-    raf = requestAnimationFrame(tick);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.documentElement.addEventListener('pointerleave', onLeave);
+    wake();
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerdown', onDown);
-      document.removeEventListener('pointerleave', onLeave);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('scroll', onScroll);
+      document.documentElement.removeEventListener('pointerleave', onLeave);
       document.documentElement.classList.remove('has-cursor');
     };
   }, []);
 
-  const corner = 'absolute w-2.5 h-2.5 border-current';
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[300] text-white mix-blend-difference">
-      <div ref={frame} className="absolute left-0 top-0 opacity-0 transition-opacity duration-150">
-        <span className={`${corner} left-0 top-0 border-l-[1.5px] border-t-[1.5px]`} />
-        <span className={`${corner} right-0 top-0 border-r-[1.5px] border-t-[1.5px]`} />
-        <span className={`${corner} left-0 bottom-0 border-l-[1.5px] border-b-[1.5px]`} />
-        <span className={`${corner} right-0 bottom-0 border-r-[1.5px] border-b-[1.5px]`} />
-        <span ref={label} className="absolute left-full top-full ml-1.5 mt-1 text-[13px] font-medium leading-none whitespace-nowrap" />
+    <div ref={root} aria-hidden="true" className="cursor pointer-events-none fixed inset-0 z-[500]">
+      <div ref={ring} className="cursor-ring absolute left-0 top-0 opacity-0">
+        <span ref={label} className="cursor-label" data-show="0" />
       </div>
-      <div ref={dot} className="absolute left-0 top-0 w-2 h-2 bg-white opacity-0" />
+      <div ref={dot} className="cursor-dot absolute left-0 top-0 w-1.5 h-1.5 rounded-full opacity-0" />
     </div>
   );
 }

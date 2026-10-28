@@ -1,12 +1,13 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { MotionConfig, AnimatePresence, motion } from 'motion/react';
+import { MotionConfig, AnimatePresence, motion, useScroll, useTransform } from 'motion/react';
 
 import Home from './pages/Home';
 import VerifyIdentity from './pages/VerifyIdentity';
 import AIFooter from './components/AIFooter';
 import Cursor from './components/Cursor';
-import Sound from './components/Sound';
+import Sound, { SoundInvite } from './components/Sound';
+import Entry from './components/Entry';
 import { RouteCurtain } from './components/Intro';
 import { RelayLogo } from './brand/Logo';
 import { applyHead } from './content/head';
@@ -16,6 +17,7 @@ import { startSmoothScroll, scrollToTop, setScrollLock } from './lib/scroll';
 // Articles and content pages (markdown) load on demand, keeping the app bundle small.
 const DocRoute = lazy(() => import('./pages/Docs').then((m) => ({ default: m.DocRoute })));
 const DocsIndex = lazy(() => import('./pages/Docs').then((m) => ({ default: m.DocsIndex })));
+const BrandRoute = lazy(() => import('./pages/Docs').then((m) => ({ default: m.BrandRoute })));
 
 const NAV = [
   { to: '/how-it-works', label: 'How it works' },
@@ -31,7 +33,7 @@ function Header() {
   useEffect(() => { setScrollLock(open); }, [open]);
   return (
     <header className="sticky top-0 z-50 bg-bg/95 border-b border-line">
-      <div className="wrap h-16 flex items-center gap-8">
+      <div className="wrap h-16 flex items-center gap-4 sm:gap-8">
         <Link to="/" aria-label="Relay home" className="group shrink-0"><RelayLogo /></Link>
         <nav className="hidden lg:flex items-center gap-1 ml-6" aria-label="Main">
           {NAV.map(({ to, label }) => (
@@ -39,12 +41,12 @@ function Header() {
               className={`h-10 px-3.5 inline-flex items-center rounded-full text-[15.5px] transition-colors ${location.pathname === to ? 'bg-pale text-signal' : 'text-ink-2 hover:text-ink hover:bg-bg-2'}`}>{label}</Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <Sound />
           <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex h-10 px-3.5 items-center rounded-full text-[15.5px] text-ink-2 hover:text-ink hover:bg-bg-2">
             GitHub<span className="sr-only"> (opens in a new tab)</span>
           </a>
-          <Link to="/" className="btn btn-signal h-10 px-5 text-[15px]">Send a file</Link>
+          <Link to="/" className="btn btn-signal h-10 px-4 sm:px-5 text-[15px]"><span>Send<span className="hidden sm:inline"> a file</span></span></Link>
           <button onClick={() => setOpen(!open)} className="lg:hidden w-11 h-11 -mr-2 flex items-center justify-center" aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? 'Close menu' : 'Open menu'}>
             <span className="relative w-5 h-3" aria-hidden="true">
               <span className={`absolute left-0 right-0 h-[2px] bg-ink transition-transform ${open ? 'top-[5px] rotate-45' : 'top-0'}`} />
@@ -101,9 +103,12 @@ function FitWord({ text, w = 9 }: { text: string; w?: number }) {
     document.fonts?.ready.then(fit);
     return () => ro.disconnect();
   }, [text]);
+  // The word rises out of the page as the footer scrolls into view.
+  const { scrollYProgress } = useScroll({ target: box, offset: ['start end', 'end end'] });
+  const y = useTransform(scrollYProgress, [0, 1], ['55%', '0%']);
   return (
     <div ref={box} className="overflow-hidden" aria-hidden="true">
-      <span ref={word} className="display inline-block whitespace-nowrap leading-[.78] pt-[2%]" style={{ ['--w' as string]: w }}>{text}</span>
+      <motion.span ref={word} className="display inline-block whitespace-nowrap leading-[.78] pt-[2%] will-change-transform" style={{ ['--w' as string]: w, y }}>{text}</motion.span>
     </div>
   );
 }
@@ -130,6 +135,7 @@ function Footer() {
         <div className="py-6 flex flex-col md:flex-row gap-3 md:items-center justify-between text-[14px] text-ink-3">
           <p>© 2026 Relay. MIT licence. Music: “Relay” by Thepla Theorist and Rishi Shah.</p>
           <p className="flex flex-wrap gap-x-6 gap-y-2">
+            <Link to="/brand" className="hover:text-ink">Brand kit</Link>
             <Link to="/self-hosted-file-sharing" className="hover:text-ink">Self-host it</Link>
             <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-ink">Source code</a>
             <a href="/llms.txt" className="hover:text-ink">llms.txt</a>
@@ -167,6 +173,7 @@ export default function App() {
               <Route path="/" element={<HomeRoute />} />
               <Route path="/articles" element={<DocsIndex />} />
               <Route path="/verify-identity" element={<VerifyIdentity />} />
+              <Route path="/brand" element={<BrandRoute />} />
               <Route path="/:slug" element={<DocRoute />} />
               <Route path="*" element={<DocRoute />} />
             </Routes>
@@ -175,6 +182,8 @@ export default function App() {
         <Footer />
         <RouteCurtain />
         <Cursor />
+        <SoundInvite />
+        <Entry />
       </div>
     </MotionConfig>
   );

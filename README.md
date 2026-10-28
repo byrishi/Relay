@@ -165,6 +165,14 @@ Every guide is a Markdown file in `content/articles/` with front matter (`title`
 
 Old URLs redirect (301) through `content/redirects.json`.
 
+Search and AI engines:
+- Every page has its own title, description, canonical URL, 1200×630 link preview (`public/og/`) and JSON-LD (WebApplication, Organization, Person, WebSite, Article, FAQPage, BreadcrumbList).
+- `robots.txt` welcomes search and AI crawlers; `llms.txt`, `llms-full.txt` and a Markdown copy of every page are generated at build time.
+- After each deploy, a GitHub Action submits the sitemap to IndexNow (Bing, Yandex and others; Bing also powers ChatGPT search and Copilot).
+- To verify the site in Google Search Console or Bing Webmaster Tools, set `GOOGLE_SITE_VERIFICATION` or `BING_SITE_VERIFICATION` on the host to the token they give you.
+- The brand kit lives at `/brand`.
+
+
 ## Limitations
 
 - Both devices must be online during the transfer; Relay stores nothing.

@@ -7,7 +7,7 @@ date: 2026-10-28
 updated: 2026-10-28
 order: 23
 keywords: share files on same wifi, transfer files over wifi, local network file sharing, send files over lan, nearby share
-related: airdrop-alternative, relay-vs-localsend, send-files-from-phone-to-pc, how-p2p-file-transfer-works
+related: transfer-files-between-two-computers, shareit-alternative, airdrop-alternative, relay-vs-localsend, send-files-from-phone-to-pc
 ---
 **On the same Wi-Fi, devices running Relay find each other automatically under Nearby. Tap one, accept on the other, and send: no code and no app.** The file travels across your local network, so it's as fast as your Wi-Fi allows and never touches the internet.
 

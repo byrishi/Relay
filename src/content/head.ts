@@ -16,6 +16,11 @@ export function applyHead(h: Head) {
   set('meta[property="og:type"]', 'content', h.ogType, meta('og:type', true));
   set('meta[name="twitter:title"]', 'content', h.title, meta('twitter:title'));
   set('meta[name="twitter:description"]', 'content', h.description, meta('twitter:description'));
+  if (h.image) {
+    set('meta[property="og:image"]', 'content', h.image, meta('og:image', true));
+    set('meta[name="twitter:image"]', 'content', h.image, meta('twitter:image'));
+    set('meta[property="og:image:alt"]', 'content', h.imageAlt || h.title, meta('og:image:alt', true));
+  }
   set('link[rel="canonical"]', 'href', h.canonical, () => { const l = document.createElement('link'); l.rel = 'canonical'; return l; });
   const alt = document.head.querySelector('link[rel="alternate"][type="text/markdown"]');
   if (h.markdown) {

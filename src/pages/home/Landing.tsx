@@ -1,15 +1,17 @@
-import { ReactNode, useRef } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, MotionValue } from 'motion/react';
 import { AppWindow, CompareTable, Faq, LandingProps } from './shared';
-import { KineticHeading, KineticLine } from '../../components/Kinetic';
+import { KineticLine } from '../../components/Kinetic';
+import { RevealWords, Stagger, item } from '../../components/Reveal';
+import { useEntryOpen } from '../../lib/entry';
 
 const ease = [0.76, 0, 0.24, 1] as const;
 
-function H2({ id, children, className = '' }: { id: string; children: ReactNode; className?: string }) {
+function H2({ id, children, className = '' }: { id: string; children: string; className?: string }) {
   return (
     <h2 id={id} className={`display text-[46px] sm:text-[60px] md:text-[80px] text-balance text-ink ${className}`} style={{ ['--w' as string]: 3.5 }}>
-      {children}
+      <RevealWords text={children} />
     </h2>
   );
 }
@@ -59,6 +61,16 @@ function Path() {
   );
 }
 
+/** One headline line rising out of its own mask, after the sheet opens. */
+function Rise({ i, children }: { i: number; children: React.ReactNode }) {
+  const waiting = useEntryOpen();
+  return (
+    <span className="block overflow-hidden pb-[0.1em] -mb-[0.1em]">
+      <motion.span className="block will-change-transform" initial={{ y: '102%' }} animate={waiting ? { y: '102%' } : { y: 0 }} transition={{ duration: 1, ease, delay: (waiting ? 0 : 0.35) + i * 0.09 }}>{children}</motion.span>
+    </span>
+  );
+}
+
 const FACTS: { title: string; body: string; to: string; more: string }[] = [
   { title: 'No size limit', body: 'Send a 40 GB video the same way as a photo. Chrome and Edge write big files straight to disk instead of holding them in memory.', to: '/best-way-to-send-large-files', more: 'Sending large files' },
   { title: 'Nothing is stored', body: 'Files go from one device to the other and nowhere else, so there is no copy on a server to leak or expire.', to: '/security', more: 'How Relay is secured' },
@@ -74,20 +86,18 @@ export default function Landing({ relay, onStage }: LandingProps) {
 
   const heading = (
     <div className="px-6 md:px-10 pt-9 md:pt-14 pb-6 md:pb-10">
-      <KineticHeading id="hero-title" label="Send files straight to another device." className="text-white select-none leading-[.86]">
+      <h1 id="hero-title" className="sr-only">Free file transfer: send files straight to another device</h1>
+      <div aria-hidden="true" data-nosnippet className="text-white select-none leading-[.86]">
         <span className="md:hidden block text-[13.4vw]">
-          <KineticLine text="Send files" base={3.4} peak={3.4} />
-          <KineticLine text="straight to" base={3.4} peak={3.4} delay={80} />
-          <KineticLine text="another device." base={3.4} peak={3.4} delay={160} />
+          {['Send files', 'straight to', 'another device.'].map((t, i) => <Rise key={t} i={i}><KineticLine text={t} base={3.4} peak={3.4} delay={250 + i * 80} /></Rise>)}
         </span>
         <span className="hidden md:block text-[9.4vw] 2xl:text-[136px]">
-          <KineticLine text="Send files straight" base={3.4} peak={8} />
-          <KineticLine text="to another device." base={3.4} peak={8} delay={100} />
+          {['Send files straight', 'to another device.'].map((t, i) => <Rise key={t} i={i}><KineticLine text={t} base={3.4} peak={8} delay={250 + i * 100} /></Rise>)}
         </span>
-      </KineticHeading>
+      </div>
       <div className="mt-6 md:mt-9 flex flex-col md:flex-row md:items-end justify-between gap-5">
-        <p className="text-[18px] md:text-[21px] text-dev-fg-2 max-w-[44ch] leading-snug">Nothing is uploaded. No account, no size limit, encrypted end to end. Free and open source.</p>
-        <button onClick={relay.createRoom} className="key key-signal shrink-0" data-cursor="Go">Start sending</button>
+        <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.7 }} className="text-[18px] md:text-[21px] text-dev-fg-2 max-w-[44ch] leading-snug">Free file transfer between any two devices. Nothing is uploaded: no account, no size limit, encrypted end to end.</motion.p>
+        <button onClick={relay.createRoom} className="key key-signal shrink-0">Start sending</button>
       </div>
     </div>
   );
@@ -107,33 +117,33 @@ export default function Landing({ relay, onStage }: LandingProps) {
           <p className="md:col-span-4 md:col-start-9 self-end text-[18px] text-ink-2 leading-relaxed">Relay introduces the two devices, then steps aside. The file goes straight across, over a connection only those two devices can read.</p>
         </div>
         <Path />
-        <ol className="mt-16 md:mt-20 grid md:grid-cols-3 gap-8 md:gap-10">
+        <Stagger as="ol" className="mt-16 md:mt-20 grid md:grid-cols-3 gap-8 md:gap-10">
           {[
             ['Open Relay and choose files', 'Or drop them anywhere on the page. You get a link, a room code and a QR code.'],
             ['Open the link on the other device', 'Or scan the QR code. You approve the device before anything is sent.'],
             ['The file streams across', 'Encrypted from end to end. Close the tab and the room is gone.'],
           ].map(([t, b], i) => (
-            <li key={t} className="flex gap-4">
+            <motion.li key={t} className="flex gap-4" {...item}>
               <span className="w-9 h-9 shrink-0 rounded-full bg-pale text-signal font-medium flex items-center justify-center" aria-hidden="true">{i + 1}</span>
               <div>
                 <h3 className="text-[19px] font-medium leading-snug">{t}</h3>
                 <p className="text-ink-2 mt-1.5 leading-relaxed">{b}</p>
               </div>
-            </li>
+            </motion.li>
           ))}
-        </ol>
+        </Stagger>
       </section>
 
       <section aria-labelledby="facts-title" className="wrap pt-28 md:pt-44">
         <H2 id="facts-title" className="max-w-[14ch]">Made for the files you actually send.</H2>
-        <dl className="mt-12 md:mt-16 grid md:grid-cols-2 gap-x-16">
+        <Stagger as="dl" className="mt-12 md:mt-16 grid md:grid-cols-2 gap-x-16">
           {FACTS.map((f) => (
-            <div key={f.title} className="py-7 border-t border-line">
+            <motion.div key={f.title} className="py-7 border-t border-line" {...item}>
               <dt className="text-[22px] md:text-[24px] font-medium leading-snug">{f.title}</dt>
               <dd className="mt-2 text-ink-2 leading-relaxed max-w-[52ch]">{f.body} <Link to={f.to} className="link text-ink whitespace-nowrap">{f.more}</Link></dd>
-            </div>
+            </motion.div>
           ))}
-        </dl>
+        </Stagger>
       </section>
 
       <section aria-labelledby="compare-title" className="wrap pt-28 md:pt-44">

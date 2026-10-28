@@ -7,7 +7,7 @@ date: 2026-05-24
 updated: 2026-10-28
 order: 30
 keywords: how p2p file transfer works, direct file transfer, how does peer to peer work, nat traversal, webrtc data channel
-related: webrtc-file-transfer, turn-vs-stun, webrtc-security, peer-to-peer-file-sharing
+related: file-transfer-glossary, webrtc-file-transfer, turn-vs-stun, webrtc-security, peer-to-peer-file-sharing
 ---
 **Peer-to-peer file transfer has four steps: the devices find each other through a signaling server, they discover a network route with STUN (or a TURN relay), they set up an encrypted channel, and the file streams across in chunks with flow control.** Here is each step, using Relay as the example.
 

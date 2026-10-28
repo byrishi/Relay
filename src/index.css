@@ -5,11 +5,11 @@
    Aujournuit (Collletttivo): display, with a width axis we animate.
    Apfel Grotezk (Collletttivo): text and interface.
    Departure Mono (Helena Zhang): data, codes, labels. */
-@font-face { font-family: "Aujournuit"; src: url("./assets/fonts/Aujournuit-VariableVF.woff2") format("woff2"); font-display: swap; }
-@font-face { font-family: "Apfel Grotezk"; src: url("./assets/fonts/ApfelGrotezk-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Apfel Grotezk"; src: url("./assets/fonts/ApfelGrotezk-Mittel.woff2") format("woff2"); font-weight: 500; font-display: swap; }
-@font-face { font-family: "Apfel Grotezk"; src: url("./assets/fonts/ApfelGrotezk-Fett.woff2") format("woff2"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Departure Mono"; src: url("./assets/fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Aujournuit"; src: url("/fonts/Aujournuit-VariableVF.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Apfel Grotezk"; src: url("/fonts/ApfelGrotezk-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Apfel Grotezk"; src: url("/fonts/ApfelGrotezk-Mittel.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Apfel Grotezk"; src: url("/fonts/ApfelGrotezk-Fett.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Departure Mono"; src: url("/fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: swap; }
 
 @theme {
   --font-sans: "Apfel Grotezk", ui-sans-serif, system-ui, sans-serif;
@@ -150,3 +150,33 @@ html.lenis, html.lenis body { height: auto; }
 /* Sound key: bars move only while music plays */
 .eq { animation: eq 0.9s ease-in-out infinite alternate; height: 30%; }
 @keyframes eq { to { height: 100%; } }
+
+/* Anchored headings clear the sticky header */
+.prose :is(h2, h3) { scroll-margin-top: 96px; }
+
+/* FAQ answers open and close smoothly where the browser supports it */
+:root { interpolate-size: allow-keywords; }
+details::details-content { height: 0; overflow: hidden; transition: height .45s cubic-bezier(.22,1,.36,1), content-visibility .45s allow-discrete; }
+details[open]::details-content { height: auto; }
+
+/* Guide pages: the title and summary rise in once on arrival */
+.rise { animation: rise .9s cubic-bezier(.22,1,.36,1) both; }
+.rise-2 { animation-delay: .12s; }
+.rise-3 { animation-delay: .22s; }
+@keyframes rise { from { opacity: 0; transform: translateY(28px); } }
+
+/* Cards and keys lift a little under the pointer */
+@media (hover: hover) {
+  .lift { transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s; }
+  .lift:hover { transform: translateY(-3px); }
+}
+
+/* Cursor colours: ultramarine on paper, white on the blue sheet */
+.cursor { --cc: var(--color-signal); }
+.cursor[data-blue="1"] { --cc: #fff; }
+.cursor-dot { background: var(--cc); transition: opacity .2s, background-color .2s, transform .15s; }
+.cursor-ring { border: 1.5px solid var(--cc); transition: opacity .2s, border-color .2s, background-color .25s; will-change: transform, width, height; }
+.cursor[data-on="1"] .cursor-ring { background: color-mix(in srgb, var(--cc) 8%, transparent); }
+.cursor-label { position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%) translateY(-4px); padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 500; line-height: 1.2; white-space: nowrap; background: var(--cc); color: var(--color-signal); opacity: 0; transition: opacity .2s, transform .25s; }
+.cursor:not([data-blue="1"]) .cursor-label { color: #fff; }
+.cursor-label[data-show="1"] { opacity: 1; transform: translateX(-50%) translateY(0); }

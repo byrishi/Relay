@@ -32,3 +32,14 @@ Guides live in `content/articles/` as Markdown with front matter. Copy an existi
 ## Security
 
 Please don't open public issues for security problems. Follow [SECURITY.md](SECURITY.md) instead.
+
+## Images, icons and link previews
+
+Favicons, app icons, the brand-kit files and one link preview per page (`public/og/<slug>.png`) are generated from the mark, the fonts and `content/*.md`. After adding or renaming an article, run:
+
+```sh
+npm i --no-save playwright && npx playwright install chromium
+node scripts/brand-assets.mjs
+```
+
+and commit the changed images. The build itself never needs Playwright.

@@ -12,7 +12,7 @@ import path from 'node:path';
 import { parseDoc, Doc, SITE } from '../src/content/parse';
 import { HOME } from '../src/content/site';
 import {
-  Head, esc, headForDoc, headForIndex, renderDocPage, renderDocsIndex, renderHomeStatic, docToMarkdown,
+  Head, esc, headForDoc, headForIndex, headForBrand, renderDocPage, renderDocsIndex, renderHomeStatic, renderBrandPage, brandMarkdown, docToMarkdown,
 } from '../src/content/render';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -35,7 +35,7 @@ const redirects: Record<string, string> = JSON.parse(fs.readFileSync(path.join(r
 
 // ── sanity checks ───────────────────────────────────────────────────────────
 const problems: string[] = [];
-const known = new Set(['', 'articles', 'verify-identity', ...bySlug.keys()]);
+const known = new Set(['', 'articles', 'verify-identity', 'brand', ...bySlug.keys()]);
 for (const d of [home, ...articles, ...pages]) {
   if (!d.description) problems.push(`${d.slug}: missing description`);
   if (d.description.length > 175) problems.push(`${d.slug}: description too long (${d.description.length})`);
@@ -56,6 +56,13 @@ if (problems.length) {
   if (process.env.STRICT_CONTENT !== '0') process.exit(1);
 }
 
+// Search-console ownership tags, set as environment variables on the host (optional).
+const verification = [
+  ['google-site-verification', process.env.GOOGLE_SITE_VERIFICATION],
+  ['msvalidate.01', process.env.BING_SITE_VERIFICATION],
+  ['yandex-verification', process.env.YANDEX_VERIFICATION],
+].filter(([, v]) => v).map(([k, v]) => `<meta name="${k}" content="${esc(String(v))}" />`);
+
 // ── HTML pages ──────────────────────────────────────────────────────────────
 function page(head: Head, body: string) {
   const tags = [
@@ -69,10 +76,17 @@ function page(head: Head, body: string) {
     `<meta property="og:description" content="${esc(head.description)}" />`,
     `<meta name="twitter:title" content="${esc(head.title)}" />`,
     `<meta name="twitter:description" content="${esc(head.description)}" />`,
+    `<meta property="og:image" content="${head.image || SITE.ogImage}" />`,
+    `<meta property="og:image:alt" content="${esc(head.imageAlt || head.title)}" />`,
+    `<meta name="twitter:image" content="${head.image || SITE.ogImage}" />`,
+    ...verification,
     head.noindex ? '<meta name="robots" content="noindex" />' : '',
     ...head.jsonLd.map((o) => `<script type="application/ld+json" data-ld="page">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`),
   ].filter(Boolean).join('\n    ');
   return template
+    .replace(/\n\s*<meta property="og:image" [^>]*>/, '')
+    .replace(/\n\s*<meta property="og:image:alt" [^>]*>/, '')
+    .replace(/\n\s*<meta name="twitter:image" [^>]*>/, '')
     .replace(/<!--seo:start-->[\s\S]*?<!--seo:end-->/, tags)
     .replace(/<meta name="robots"[^>]*>\n?\s*/, head.noindex ? '' : '$&')
     .replace('<!--app-->', body);
@@ -99,6 +113,8 @@ for (const d of [...articles, ...pages]) {
 }
 write('articles.html', page(headForIndex(), renderDocsIndex(articles)));
 write('articles.md', `# Relay guides\n\n${articles.map((a) => `- [${a.h1}](${SITE.url}/${a.slug}.md): ${a.description}`).join('\n')}\n`);
+write('brand.html', page(headForBrand(), renderBrandPage()));
+write('brand.md', brandMarkdown());
 write('verify-identity.html', page({
   title: 'Verify Relay independently | Relay', description: 'Check what Relay is, who builds it and how it works using independent AI and search tools and the public source code.',
   canonical: `${SITE.url}/verify-identity`, ogType: 'website', jsonLd: [],
@@ -121,6 +137,7 @@ Key facts:
 
 ## Product
 - [Home](${SITE.url}/index.md): What Relay is and how to send a file.
+- [Brand kit](${SITE.url}/brand.md): Logo files, colours, type and an approved description of Relay.
 ${pages.map(line).join('\n')}
 
 ${cats.map((c) => `## ${c}\n${articles.filter((a) => a.category === c).sort((a, b) => a.order - b.order).map(line).join('\n')}`).join('\n\n')}
@@ -138,6 +155,7 @@ const newest = [...articles, ...pages].reduce((m, d) => (d.updated > m ? d.updat
 const urls: [string, string, string][] = [
   [`${SITE.url}/`, newest, '1.0'],
   [`${SITE.url}/articles`, newest, '0.8'],
+  [`${SITE.url}/brand`, newest, '0.4'],
   ...pages.map((d) => [`${SITE.url}/${d.slug}`, d.updated, '0.7'] as [string, string, string]),
   ...articles.map((d) => [`${SITE.url}/${d.slug}`, d.updated, d.order <= 10 ? '0.9' : '0.8'] as [string, string, string]),
 ];

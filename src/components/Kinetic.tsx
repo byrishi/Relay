@@ -15,34 +15,36 @@ export function KineticLine({ text, base = 4, peak = 9, radius = 260, className 
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fine = window.matchMedia('(pointer: fine)').matches;
     const cur = letters.map(() => (still ? base : 1));
-    const goal = letters.map(() => base);
     let opened = still;
-    let raf = 0;
+    let raf = 0, onScreen = true;
     let px = -1e4, py = -1e4;
-    const start = window.setTimeout(() => { opened = true; }, delay);
-    const onMove = (e: PointerEvent) => { px = e.clientX; py = e.clientY; };
-    if (fine && !still) window.addEventListener('pointermove', onMove, { passive: true });
 
+    // Runs only while something is changing and the line is on screen.
     const tick = () => {
+      raf = 0;
       let moving = false;
       letters.forEach((l, i) => {
         let g = opened ? base : 1;
-        if (opened && fine && !still) {
+        if (opened && fine && !still && peak !== base) {
           const r = l.getBoundingClientRect();
           const d = Math.hypot(r.left + r.width / 2 - px, r.top + r.height / 2 - py);
           g = base + (peak - base) * Math.max(0, 1 - d / radius) ** 2;
         }
-        goal[i] = g;
-        const next = cur[i] + (goal[i] - cur[i]) * (opened && cur[i] < base - 0.05 ? 0.06 + i * 0.002 : 0.14);
+        const next = cur[i] + (g - cur[i]) * (opened && cur[i] < base - 0.05 ? 0.06 + i * 0.002 : 0.14);
         if (Math.abs(next - cur[i]) > 0.002) moving = true;
         cur[i] = next;
         l.style.setProperty('--w', next.toFixed(3));
       });
-      raf = requestAnimationFrame(tick);
-      void moving;
+      if (moving && onScreen) raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); clearTimeout(start); window.removeEventListener('pointermove', onMove); };
+    const wake = () => { if (!raf && onScreen) raf = requestAnimationFrame(tick); };
+    const start = window.setTimeout(() => { opened = true; wake(); }, delay);
+    const onMove = (e: PointerEvent) => { px = e.clientX; py = e.clientY; wake(); };
+    if (fine && !still && peak !== base) window.addEventListener('pointermove', onMove, { passive: true });
+    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; if (onScreen) wake(); });
+    io.observe(root);
+    wake();
+    return () => { cancelAnimationFrame(raf); clearTimeout(start); io.disconnect(); window.removeEventListener('pointermove', onMove); };
   }, [text, base, peak, radius, delay]);
 
   return (

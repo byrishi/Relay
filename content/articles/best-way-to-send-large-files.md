@@ -7,7 +7,7 @@ date: 2026-05-24
 updated: 2026-10-28
 order: 3
 keywords: send large files, how to send large files, send big files free, large file transfer, no size limit file transfer
-related: send-large-video-files, relay-vs-wetransfer, resume-interrupted-file-transfer, wetransfer-alternative
+related: file-size-limits, email-large-files, best-free-file-transfer-sites, send-large-video-files, relay-vs-wetransfer
 ---
 **The fastest free way to send a large file is to stream it directly to the other device, so there is no upload step and no size limit.** Tools like Relay do this in the browser. If the recipient can't be online at the same time, use a cloud service with a big enough plan.
 

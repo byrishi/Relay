@@ -7,7 +7,7 @@ date: 2026-10-28
 updated: 2026-10-28
 order: 21
 keywords: send files from iphone to android, iphone to android file transfer, transfer photos iphone to android, airdrop to android
-related: airdrop-alternative, send-files-from-phone-to-pc, send-large-video-files, share-files-on-same-wifi
+related: quick-share-alternative, send-large-videos-on-whatsapp, airdrop-alternative, send-files-from-phone-to-pc, send-large-video-files
 ---
 **The quickest way to send files between an iPhone and an Android phone, with no app and no quality loss, is to open Relay in both browsers and send directly.** Relay sends exactly the file you pick, byte for byte, with no extra compression.
 

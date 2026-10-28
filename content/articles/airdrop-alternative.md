@@ -7,7 +7,7 @@ date: 2026-10-28
 updated: 2026-10-28
 order: 6
 keywords: airdrop alternative, airdrop for windows, airdrop for android, airdrop windows to iphone, cross platform airdrop
-related: send-files-from-iphone-to-android, send-files-from-phone-to-pc, share-files-on-same-wifi, best-p2p-file-sharing-apps
+related: quick-share-alternative, transfer-files-between-mac-and-windows, send-files-from-iphone-to-android, send-files-from-phone-to-pc, share-files-on-same-wifi
 ---
 **AirDrop is built for Apple devices. Google's Quick Share can now exchange files with AirDrop on some Android phones (starting with the Pixel 10 in late 2025), but Windows, Linux and most other combinations still need a cross-platform tool.** Relay works in any browser with no install; LocalSend is a native app for your local network.
 

@@ -28,7 +28,7 @@ export default function VerifyIdentity() {
         <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {aiTools(Q).map((t) => (
             <li key={t.name}>
-              <a href={t.href} target="_blank" rel="noopener noreferrer" className={tile} data-cursor="Ask">
+              <a href={t.href} target="_blank" rel="noopener noreferrer" className={tile}>
                 <span className={`w-11 h-11 shrink-0 rounded-full bg-white shadow-[inset_0_0_0_1px_var(--color-line)] flex items-center justify-center p-2.5 ${t.tint}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: t.logo }} />
                 <span className="flex flex-col flex-1 min-w-0">
                   <span className="text-[17px] font-medium">Ask {t.name}<span className="sr-only"> (opens in a new tab)</span></span>
