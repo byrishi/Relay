@@ -12,7 +12,7 @@ import { atmosphere } from '../lib/atmosphere';
  *      connected → two luminous nodes joined by a river of light whose
  *                  flow follows the real transfer speed
  *
- * Rendering: additive gaussian point sprites → feedback buffer (light trails)
+ * Rendering: additive gaussian point sprites (cleared every frame, no trails)
  * → separable blur (soft bloom) → composite with haze, tone map, vignette, grain.
  * All particle motion lives in the vertex shader; the CPU only updates uniforms.
  */
@@ -166,17 +166,12 @@ void main(){
   if (r2 > 1.0) discard;
   float core = exp(-r2 * 5.0);
   float halo = exp(-r2 * 1.6) * 0.25;
-  o = vec4(vColor * (core + halo) * vAlpha, 1.0);
+  o = vec4(vColor * (core + halo) * vAlpha * 2.6, 1.0);
 }`;
 
 const QUAD_VS = /* glsl */ `#version 300 es
 in vec2 aPos; out vec2 vUv;
 void main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }`;
-
-const FADE_FS = /* glsl */ `#version 300 es
-precision highp float;
-in vec2 vUv; uniform sampler2D uTex; uniform float uDecay; out vec4 o;
-void main(){ o = vec4(texture(uTex, vUv).rgb * uDecay, 1.0); }`;
 
 const BLUR_FS = /* glsl */ `#version 300 es
 precision highp float;
@@ -265,10 +260,9 @@ export default function Atmosphere() {
     const mobile = window.matchMedia('(max-width: 768px)').matches || (navigator.hardwareConcurrency || 4) <= 4;
     const hdr = !!gl.getExtension('EXT_color_buffer_float') || !!gl.getExtension('EXT_color_buffer_half_float');
 
-    let points, fade, blur, comp;
+    let points, blur, comp;
     try {
       points = compile(gl, POINT_VS, POINT_FS);
-      fade = compile(gl, QUAD_VS, FADE_FS);
       blur = compile(gl, QUAD_VS, BLUR_FS);
       comp = compile(gl, QUAD_VS, COMPOSITE_FS);
     } catch (e) {
@@ -333,7 +327,7 @@ export default function Atmosphere() {
       W = w; H = h;
       canvas.width = W; canvas.height = H;
       scene.forEach(freeTarget); freeTarget(bloomA); freeTarget(bloomB);
-      scene = [makeTarget(W, H), makeTarget(W, H)];
+      scene = [makeTarget(W, H)];
       const bw = Math.max(2, W >> 2), bh = Math.max(2, H >> 2);
       bloomA = makeTarget(bw, bh); bloomB = makeTarget(bw, bh);
     };
@@ -350,7 +344,7 @@ export default function Atmosphere() {
 
     const mode = { x: 1, y: 0, z: 0 };
     let energy = 0, pulse = 0, scroll = 0;
-    let cur = 0, raf = 0, last = performance.now(), time = Math.random() * 100;
+    let raf = 0, last = performance.now(), time = Math.random() * 100;
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -374,17 +368,13 @@ export default function Atmosphere() {
       scroll += (sTarget - scroll) * (1 - Math.exp(-dt * 4));
 
       const aspect = W / H;
-      const prev = scene[cur], next = scene[1 - cur];
+      const next = scene[0];
 
-      // 1) feedback: previous frame, faded → light trails
+      // 1) fresh frame every time (no feedback trails)
       gl.bindFramebuffer(gl.FRAMEBUFFER, next.fb);
       gl.viewport(0, 0, W, H);
-      gl.disable(gl.BLEND);
-      gl.useProgram(fade.p);
-      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, prev.tex);
-      gl.uniform1i(fade.u.uTex, 0);
-      gl.uniform1f(fade.u.uDecay, reduceMotion ? 0.0 : 0.78 + energy * 0.12 * mode.z);
-      gl.bindVertexArray(quadVao); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
 
       // 2) particles, additive
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
@@ -399,7 +389,6 @@ export default function Atmosphere() {
       gl.uniform3f(points.u.uMode, mode.x, mode.y, mode.z);
       gl.bindVertexArray(pointVao); gl.drawArrays(gl.POINTS, 0, total);
       gl.disable(gl.BLEND);
-      cur = 1 - cur;
 
       // 3) bloom: downsample + separable blur (twice for a wide, soft glow)
       gl.useProgram(blur.p);
