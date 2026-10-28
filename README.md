@@ -61,15 +61,19 @@ Unlike traditional upload-based platforms, Relay avoids storing user files on th
 
 ## Core Features
 
-- Direct peer-to-peer file transfer
-- WebRTC DataChannel transport
-- Real-time transfer progress
-- Multi-file sharing
-- Drag & drop support
-- QR room sharing
-- Temporary room-based sessions
-- Cross-platform browser support
-- Responsive modern UI
+- Direct peer-to-peer file transfer over WebRTC (DTLS-encrypted)
+- Accept / decline every incoming file before a single byte is sent
+- **Save straight to disk** (Chrome/Edge desktop) — no size limit, no memory pressure
+- **Resume** after a dropped connection, from the exact byte where it stopped
+- Folders keep their structure (save into a folder, or download as .zip)
+- **Safety number** on both screens to rule out a man-in-the-middle
+- Approve each device that joins; optional room password
+- Readable room codes (`amber-fox-123`), QR invite
+- **Nearby devices** on the same network — no code needed
+- Paste to send (screenshots, files, text), clipboard sync (beta)
+- Live speed graph, accurate progress/ETA, local transfer history
+- Installable app (PWA) with "Share to Relay" from the phone share menu
+- Connection badge: local network / peer-to-peer / relayed via TURN
 
 ---
 
@@ -212,8 +216,9 @@ npm run dev
 # Only needed when the frontend is hosted separately from the Node server
 VITE_BACKEND_URL=https://your-signaling-server.com
 
-# Optional TURN fallback (only used when a direct connection is impossible)
-VITE_TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349
+# Static TURN credentials (NOT recommended: anyone can read them from the bundle).
+# Prefer TURN_SECRET on the server, below.
+VITE_TURN_URLS=turn:turn.example.com:3478
 VITE_TURN_USERNAME=user
 VITE_TURN_CREDENTIAL=secret
 ```
@@ -223,9 +228,22 @@ VITE_TURN_CREDENTIAL=secret
 ## Backend
 
 ```env
-PORT=3001
+PORT=3000
 NODE_ENV=production
+
+# Comma-separated origins allowed to connect (needed if the frontend is on another domain)
+ALLOWED_ORIGINS=https://relay.example.com
+
+# How many proxies sit in front of Node (Render/Fly/Nginx = 1). Required for correct
+# per-visitor rate limiting and nearby-device grouping. Defaults to 1 in production.
+TRUST_PROXY=1
+
+# TURN with short-lived credentials (coturn: use-auth-secret + static-auth-secret)
+TURN_SECRET=long-random-string
+TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349
 ```
+
+`GET /healthz` returns `ok` (use it for uptime pings).
 
 ---
 

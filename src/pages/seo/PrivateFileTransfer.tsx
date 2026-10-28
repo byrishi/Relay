@@ -23,7 +23,7 @@ export default function PrivateFileTransfer() {
 
       <h2 className="text-3xl mt-16 mb-6">Zero-Knowledge Architecture</h2>
       <p>
-        A zero-knowledge file transfer means the system facilitating the transfer cannot, under any mathematical circumstance, decrypt or read the payload. The only entities capable of viewing the file are the sender and the explicitly authorized recipient.
+        A zero-knowledge file transfer means the system facilitating the transfer has no way to decrypt or read the payload. The only entities capable of viewing the file are the sender and the explicitly authorized recipient.
       </p>
       <p>
         Achieving this requires two non-negotiable components:
@@ -41,12 +41,12 @@ export default function PrivateFileTransfer() {
         Unlike older TCP/IP socket paradigms where developers must manually implement security layers, the WebRTC specification <strong>mandates</strong> encryption. It is impossible to open an unencrypted WebRTC connection.
       </p>
 
-      <h3 className="text-2xl mt-8 mb-4">The DTLS / SRTP Handshake</h3>
+      <h3 className="text-2xl mt-8 mb-4">The DTLS Handshake</h3>
       <p>
         When two peers (Browser A and Browser B) initialize a connection, they execute a Datagram Transport Layer Security (DTLS) handshake. This is a derivation of TLS utilized for UDP traffic. 
       </p>
       <p>
-        During this handshake, the endpoints generate and exchange ephemeral cryptographic keys. These keys are used to bootstrap the Secure Real-time Transport Protocol (SRTP) channel. Because these keys are generated natively within the memory sandbox of browsers A and B, the signaling server coordinating the handshake remains entirely blind to the keys. Consequently, any data stream pushed through the channel is rendered as unbreakable ciphertext to any packet sniffing intermediary.
+        During this handshake, the endpoints generate and exchange ephemeral cryptographic keys. These keys protect the encrypted DTLS channel that carries the file data. Because these keys are generated natively within the memory sandbox of browsers A and B, the signaling server coordinating the handshake remains entirely blind to the keys. Consequently, any data stream pushed through the channel is rendered as unbreakable ciphertext to any packet sniffing intermediary.
       </p>
 
       <div className="my-12 overflow-x-auto">
@@ -62,7 +62,7 @@ export default function PrivateFileTransfer() {
             <tr>
               <td className="p-4 font-bold text-white">Transit Encryption</td>
               <td className="p-4 text-white/70">TLS to Server (Terminated at proxy)</td>
-              <td className="p-4 text-white/70">DTLS/SRTP Direct to Peer</td>
+              <td className="p-4 text-white/70">DTLS, direct to peer</td>
             </tr>
             <tr>
               <td className="p-4 font-bold text-white">Data at Rest</td>

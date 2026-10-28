@@ -39,7 +39,7 @@ export default function Privacy() {
               <ul className="list-disc pl-6 space-y-2 text-white/70">
                 <li><strong>Your Files:</strong> Files are transferred point-to-point between browsers using WebRTC. They do not pass through or reside on our servers.</li>
                 <li><strong>Personal Identity information:</strong> We do not ask for your name, email, or phone number. There are no user accounts.</li>
-                <li><strong>Transfer Contents:</strong> We cannot decrypt or inspect the files or messages you send. All WebRTC DataChannels are End-to-End Encrypted (E2EE) using DTLS/SRTP.</li>
+                <li><strong>Transfer Contents:</strong> We cannot decrypt or inspect the files or messages you send. All WebRTC DataChannels are end-to-end encrypted with DTLS. Compare the safety number on both devices to confirm no one is in the middle.</li>
               </ul>
             </div>
           </section>
@@ -50,7 +50,7 @@ export default function Privacy() {
               <p>To establish a peer-to-peer connection, Relay operates a signaling server. This server's only purpose is to mediate the initial handshake (SDP offers and ICE candidates) between peers.</p>
               <ul className="list-disc pl-6 space-y-2 text-white/70">
                 <li><strong>Ephemeral Data:</strong> Connection metadata (like room codes and network IPs required for WebRTC negotiation) is held only in memory for the duration of the session and dropped immediately after connection or timeout.</li>
-                <li><strong>No Logs:</strong> We do not log IP addresses or the contents of signaling exchanges.</li>
+                <li><strong>No Logs:</strong> The Relay server does not log IP addresses or the contents of signaling exchanges. Rate limiting keeps IP addresses in memory for up to 10 minutes. Nearby-device discovery groups devices by a hash of their public IP, also only in memory. Your hosting provider may keep its own access logs.</li>
               </ul>
             </div>
           </section>
@@ -65,7 +65,7 @@ export default function Privacy() {
           <section className="flex flex-col gap-4">
             <h2 className="text-2xl font-pixel-line uppercase tracking-widest text-white border-b border-white/10 pb-4">4. Local Storage & Cookies</h2>
             <div className="text-white/60 font-sans leading-relaxed space-y-4">
-              <p>Relay does not use tracking cookies. The application performs file processing locally within your browser's memory and may use standard browser APIs (like OPFS or Blob storage) temporarily to assemble files before you save them to your disk.</p>
+              <p>Relay does not use tracking cookies. The application performs file processing locally within your browser's memory and may use standard browser APIs (like OPFS or Blob storage) temporarily to assemble files before you save them to your disk. On your own device it stores a random device name, and a transfer history (file names, sizes, speeds; never contents) that you can switch off or clear at any time. The footer loads brand icons from the Iconify API, which can see your IP address.</p>
             </div>
           </section>
 

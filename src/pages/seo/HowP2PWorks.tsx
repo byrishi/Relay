@@ -68,7 +68,7 @@ export default function HowP2PWorks() {
             <tr>
               <td className="p-4 font-bold text-white">4. Streaming</td>
               <td className="p-4 text-white/70">Routing encrypted payload chunks.</td>
-              <td className="p-4 text-white/70">SRTP / RTCDataChannel</td>
+              <td className="p-4 text-white/70">DTLS + SCTP (RTCDataChannel)</td>
             </tr>
           </tbody>
         </table>
@@ -79,7 +79,7 @@ export default function HowP2PWorks() {
         Prior to any file data transmitting over the newly established UDP socket, the peers perform a DTLS cryptographic handshake. Because the <Link to="/webrtc-security">WebRTC security protocol</Link> executes key generation directly between the endpoints, the transmission is definitively locked as End-to-End Encrypted (E2EE).
       </p>
       <p>
-        When the sender selects a 2GB file, the browser does not attempt to shovel 2GB of data into memory simultaneously. It slices the file into tiny sequential chunks (ArrayBuffers). These chunks stream across the P2P socket sequentially. The receiving browser catches the chunks, verifies their cryptographic integrity via SRTP checksums, and dynamically rebuilds the file stream into a local Blob before initiating a system save utilizing the browser download dialog. 
+        When the sender selects a 2GB file, the browser does not attempt to shovel 2GB of data into memory simultaneously. It slices the file into tiny sequential chunks (ArrayBuffers). These chunks stream across the P2P socket sequentially. The receiving browser catches the chunks, verifies their integrity (DTLS authenticates every packet) and writes them straight to disk or browser storage before initiating a system save utilizing the browser download dialog. 
       </p>
 
       <h2 className="text-3xl mt-16 mb-6">Why Architecture Determines Quality</h2>
