@@ -17,6 +17,7 @@ import { startSmoothScroll, scrollToTop, setScrollLock } from './lib/scroll';
 // Articles and content pages (markdown) load on demand, keeping the app bundle small.
 const DocRoute = lazy(() => import('./pages/Docs').then((m) => ({ default: m.DocRoute })));
 const DocsIndex = lazy(() => import('./pages/Docs').then((m) => ({ default: m.DocsIndex })));
+const BrandRoute = lazy(() => import('./pages/Docs').then((m) => ({ default: m.BrandRoute })));
 
 const NAV = [
   { to: '/how-it-works', label: 'How it works' },
@@ -134,6 +135,7 @@ function Footer() {
         <div className="py-6 flex flex-col md:flex-row gap-3 md:items-center justify-between text-[14px] text-ink-3">
           <p>© 2026 Relay. MIT licence. Music: “Relay” by Thepla Theorist and Rishi Shah.</p>
           <p className="flex flex-wrap gap-x-6 gap-y-2">
+            <Link to="/brand" className="hover:text-ink">Brand kit</Link>
             <Link to="/self-hosted-file-sharing" className="hover:text-ink">Self-host it</Link>
             <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-ink">Source code</a>
             <a href="/llms.txt" className="hover:text-ink">llms.txt</a>
@@ -171,6 +173,7 @@ export default function App() {
               <Route path="/" element={<HomeRoute />} />
               <Route path="/articles" element={<DocsIndex />} />
               <Route path="/verify-identity" element={<VerifyIdentity />} />
+              <Route path="/brand" element={<BrandRoute />} />
               <Route path="/:slug" element={<DocRoute />} />
               <Route path="*" element={<DocRoute />} />
             </Routes>

@@ -12,3 +12,8 @@ services:
         value: production
       - key: TRUST_PROXY
         value: "1"
+      # Optional: search-console ownership tags (paste only the content value)
+      - key: GOOGLE_SITE_VERIFICATION
+        sync: false
+      - key: BING_SITE_VERIFICATION
+        sync: false

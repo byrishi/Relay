@@ -381,7 +381,7 @@ async function startServer() {
       setHeaders(res, file) {
         if (file.endsWith('sw.js') || file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
         else if (/[\\/]assets[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        else if (/[\\/]audio[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=604800');
+        else if (/[\\/](audio|fonts|og|brandkit)[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=604800');
         if (file.endsWith('.md')) res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
       },
     }));
