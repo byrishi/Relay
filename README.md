@@ -36,7 +36,7 @@
 
 Relay is a web app that sends files **straight from one device to another** over an encrypted WebRTC connection. Nothing is uploaded to a server, so there is no file size limit, no account, and no copy left in the cloud. It runs in any modern browser on Windows, macOS, Linux, Android, iPhone and iPad.
 
-**How to use it:** open [relay.rishishah.in](https://relay.rishishah.in) and drop your files (or press **Start sending**). Share the code (`amber-fox-123`) or scan the QR code on the other device, or tap it under **Nearby**. Approve it, and the files go straight across.
+**How to use it:** open [relay.rishishah.in](https://relay.rishishah.in) and drop your files (or press **Start sending**). Share the code (`satya-ganga-108`) or scan the QR code on the other device, or tap it under **Nearby**. Approve it, and the files go straight across.
 
 ## Features
 
@@ -63,14 +63,16 @@ Relay is a web app that sends files **straight from one device to another** over
 
 **App**
 - Installable PWA with **Share to Relay** from the Android share sheet
-- Two designs, **Dark** and **Light**, with a switch in the header (or link straight to one with `?design=light`)
-- While connected, both devices' marks are joined by a stream of light that follows live speed (WebGL2)
+- The app itself is the home page: one ultramarine sheet with Send on one side and Receive on the other
+- Room codes and device names made from Sanskrit words found in the Vedas, Upanishads and the Gita (`satya-ganga-108`, *Shanti Hamsa*)
+- Optional soundtrack, off by default, streamed from a free CDN so it never costs hosting bandwidth
+- Smooth scrolling, a viewfinder cursor and page transitions, all switched off when the system asks for reduced motion
 - Self-hostable: one Node.js server or one Docker container
 
 <table>
 <tr>
-<td><img src="docs/screenshots/landing.webp" alt="Relay home page, dark design"></td>
-<td><img src="docs/screenshots/landing-light.webp" alt="Relay home page, light design"></td>
+<td><img src="docs/screenshots/landing.webp" alt="Relay home page with the transceiver"></td>
+<td><img src="docs/screenshots/guide.webp" alt="A guide page"></td>
 </tr>
 <tr>
 <td><img src="docs/screenshots/approval.webp" alt="Approving a device with its safety number"></td>
@@ -173,6 +175,16 @@ Old URLs redirect (301) through `content/redirects.json`.
 ## Contributing
 
 Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately (see [SECURITY.md](SECURITY.md)). Release notes are in [CHANGELOG.md](CHANGELOG.md).
+
+## Credits
+
+Typefaces, all under the SIL Open Font License and self-hosted in `src/assets/fonts`:
+
+- [Aujournuit](https://collletttivo.it) by Collletttivo (display)
+- [Apfel Grotezk](https://collletttivo.it) by Collletttivo (text)
+- [Departure Mono](https://departuremono.com) by Helena Zhang (room codes and safety numbers)
+
+Music: “Relay — Straight” and “Relay — Across” by Thepla Theorist and Rishi Shah. The recordings in `public/audio` are **not** MIT licensed; all rights reserved (see `public/audio/LICENSE.txt`).
 
 ## License
 
