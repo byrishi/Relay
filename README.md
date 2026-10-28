@@ -210,6 +210,11 @@ npm run dev
 
 ```env
 VITE_SIGNALING_SERVER=wss://your-domain.com
+
+# Optional TURN fallback (only used when a direct connection is impossible)
+VITE_TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349
+VITE_TURN_USERNAME=user
+VITE_TURN_CREDENTIAL=secret
 ```
 
 ---
@@ -313,7 +318,7 @@ Examples include:
 - CGNAT mobile carriers
 - restrictive public WiFi
 
-TURN support is planned for future releases.
+Relay always tries a direct connection first. To cover those networks, set the optional `VITE_TURN_*` variables above (e.g. a self-hosted [coturn](https://github.com/coturn/coturn) server). The connected screen shows which route each peer is using: **Direct · Local network**, **Direct · Peer-to-peer**, or **Relayed via TURN**. Data stays end-to-end encrypted (DTLS) even when relayed.
 
 ---
 

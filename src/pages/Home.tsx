@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Download, Laptop, Smartphone, Wifi, QrCode, UploadCloud, X, Check, File as FileIcon, Copy, Link2, Send, MessageSquare, ShieldCheck, Zap, Lock, Globe, HardDrive, Pause, Play } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react';
-import { WebRTCManager, SignalData } from '../lib/webrtc';
+import { WebRTCManager, TransferUpdate, TransferStatus, RouteInfo } from '../lib/webrtc';
 import { cn } from '../lib/utils';
 import JSZip from 'jszip';
 
@@ -13,12 +13,24 @@ interface TransferTask {
   id: string;
   name: string;
   progress: number;
-  status: 'transferring' | 'completed' | 'paused' | 'cancelled';
+  status: TransferStatus;
   url?: string;
   isSending: boolean;
   size?: number;
   speed?: number;
+  avgSpeed?: number;
   timeRemaining?: number;
+  error?: string;
+  peerIds?: string[];
+}
+
+function routeLabel(r?: RouteInfo) {
+  if (!r) return 'Negotiating…';
+  const base = r.route === 'lan' ? 'Direct · Local network'
+    : r.route === 'p2p' ? 'Direct · Peer-to-peer'
+    : r.route === 'relay' ? 'Relayed via TURN'
+    : 'Direct';
+  return r.rttMs != null ? `${base} · ${r.rttMs}ms` : base;
 }
 
 type TextMessage = {
@@ -126,7 +138,49 @@ export default function Home() {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   
+  const [routes, setRoutes] = useState<Record<string, RouteInfo>>({});
   const webrtcRefs = useRef<Record<string, WebRTCManager>>({});
+  // transferId -> peerId -> latest update from that peer's connection
+  const peerProgress = useRef<Record<string, Record<string, TransferUpdate>>>({});
+
+  const applyTransferUpdate = useCallback((peerId: string, u: TransferUpdate) => {
+    const per = (peerProgress.current[u.id] ||= {});
+    const prevStatus = per[peerId]?.status;
+    per[peerId] = u;
+    if (u.direction === 'receive' && u.status === 'completed' && prevStatus !== 'completed') playSuccessSound();
+
+    const list = Object.values(per) as TransferUpdate[];
+    const total = u.size * list.length;
+    const bytes = list.reduce((a, x) => a + x.bytes, 0);
+    const speed = list.reduce((a, x) => a + x.speed, 0);
+    const st = list.map(x => x.status);
+    let status: TransferStatus;
+    if (st.includes('transferring')) status = 'transferring';
+    else if (st.includes('paused')) status = 'paused';
+    else if (st.includes('queued')) status = 'queued';
+    else if (st.includes('completed')) status = 'completed';
+    else if (st.includes('failed')) status = 'failed';
+    else status = 'cancelled';
+
+    setTransfers(prev => ({
+      ...prev,
+      [u.id]: {
+        ...prev[u.id],
+        id: u.id,
+        name: u.name,
+        size: u.size,
+        isSending: u.direction === 'send',
+        status,
+        progress: status === 'completed' ? 100 : total > 0 ? (bytes / total) * 100 : 0,
+        speed,
+        timeRemaining: speed > 0 ? (total - bytes) / speed : undefined,
+        avgSpeed: u.avgSpeed ?? prev[u.id]?.avgSpeed,
+        url: u.url ?? prev[u.id]?.url,
+        error: list.find(x => x.error)?.error,
+        peerIds: Object.keys(per),
+      }
+    }));
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -194,6 +248,11 @@ export default function Home() {
     rtc.onDisconnect = () => {
       rtc.close();
       delete webrtcRefs.current[targetPeerId];
+      setRoutes(prev => {
+         const next = { ...prev };
+         delete next[targetPeerId];
+         return next;
+      });
       setPeersMap(prev => {
          const next = { ...prev };
          delete next[targetPeerId];
@@ -204,43 +263,10 @@ export default function Home() {
       }
     };
 
-    rtc.onFileProgress = (progress, fileName, fileSize, speedBytesPerSec, estimatedTimeRemaining) => {
-      setTransfers(prev => {
-        const id = fileName; 
-        let newStatus = prev[id]?.status || 'transferring';
-        if (progress >= 100) newStatus = 'completed';
-        else if (progress === -1) newStatus = 'cancelled';
+    rtc.onTransferUpdate = (u) => applyTransferUpdate(targetPeerId, u);
 
-        return {
-          ...prev,
-          [id]: {
-            ...prev[id],
-            id,
-            name: fileName,
-            progress: progress === -1 ? prev[id]?.progress || 0 : Math.max(progress, prev[id]?.progress || 0),
-            status: newStatus,
-            isSending: prev[id]?.isSending ?? false,
-            size: fileSize,
-            speed: speedBytesPerSec,
-            timeRemaining: estimatedTimeRemaining
-          }
-        };
-      });
-    };
-
-    rtc.onFileReceived = (url, fileName, fileSize) => {
-      playSuccessSound();
-      setTransfers(prev => ({
-        ...prev,
-        [fileName]: {
-          ...prev[fileName],
-          url,
-          status: 'completed',
-          progress: 100,
-          isSending: false,
-          size: fileSize
-        }
-      }));
+    rtc.onRoute = (info) => {
+      setRoutes(prev => ({ ...prev, [targetPeerId]: info }));
     };
 
     rtc.onTextReceived = (text) => {
@@ -254,7 +280,7 @@ export default function Home() {
     };
 
     rtc.init(isInitiator);
-  }, [socket]);
+  }, [socket, applyTransferUpdate]);
 
   useEffect(() => {
     if (!socket) return;
@@ -339,27 +365,18 @@ export default function Home() {
   const handleFiles = (files: FileList | File[]) => {
     const peers = Object.values(webrtcRefs.current) as WebRTCManager[];
     if (!peers.length) return;
-    
+
     Array.from(files).forEach(file => {
-      let previewUrl;
+      const id = (crypto as any).randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const isMedia = /\.(jpeg|jpg|gif|png|webp|svg|mp4|webm|ogg)$/i.test(file.name);
-      if (isMedia) {
-         previewUrl = URL.createObjectURL(file);
-      }
-      
+      const previewUrl = isMedia ? URL.createObjectURL(file) : undefined;
+
       setTransfers(p => ({
         ...p,
-        [file.name]: {
-          id: file.name,
-          name: file.name,
-          progress: 0,
-          status: 'transferring',
-          isSending: true,
-          size: file.size,
-          url: previewUrl
-        }
+        [id]: { id, name: file.name, progress: 0, status: 'queued', isSending: true, size: file.size, url: previewUrl }
       }));
-      peers.forEach(rtc => rtc.sendFile(file));
+      // Each peer connection queues files and sends them one at a time.
+      peers.forEach(rtc => rtc.sendFile(file, id));
     });
   };
 
@@ -423,25 +440,8 @@ export default function Home() {
   };
 
   const manageTransferLocal = (task: TransferTask, action: 'pause' | 'resume' | 'cancel') => {
-      if (!task.isSending) return; // Receiving end waits - although canceling receive is possible, keeping it simple for sender
-      const peers = Object.values(webrtcRefs.current) as WebRTCManager[];
-      peers.forEach(rtc => rtc.manageTransfer(task.id, action));
-      
-      setTransfers(prev => {
-          const t = prev[task.id];
-          if (!t) return prev;
-          let newStatus = t.status;
-          if (action === 'pause') newStatus = 'paused';
-          else if (action === 'resume') newStatus = 'transferring';
-          else if (action === 'cancel') newStatus = 'cancelled';
-          return {
-              ...prev,
-              [task.id]: {
-                  ...t,
-                  status: newStatus
-              }
-          };
-      });
+    const ids = task.peerIds?.length ? task.peerIds : Object.keys(webrtcRefs.current);
+    ids.forEach(pid => webrtcRefs.current[pid]?.manageTransfer(task.id, action));
   };
 
   const handleSendText = (e: React.FormEvent) => {
@@ -533,7 +533,7 @@ export default function Home() {
                       <input
                         type="text"
                         placeholder="ENTER JOIN CODE"
-                        maxLength={5}
+                        maxLength={6}
                         value={joinCode}
                         onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                         onKeyDown={(e) => {
@@ -673,7 +673,17 @@ export default function Home() {
                          {Object.keys(peersMap).length} Peer{Object.keys(peersMap).length !== 1 && 's'}
                        </span>
                     </h3>
-                    <p className="text-white/50 text-[10px] font-pixel-circle tracking-[0.2em] mt-1.5 uppercase">E2EE • AES-256-GCM • ID: {roomCode}</p>
+                    <p className="text-white/50 text-[10px] font-pixel-circle tracking-[0.2em] mt-1.5 uppercase">E2EE (DTLS) • ID: {roomCode}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {(Object.values(peersMap) as { id: string, name: string, connected: boolean }[]).map(p => (
+                        <span key={p.id} className={cn(
+                          "px-2 py-0.5 rounded-[4px] border text-[10px] font-sans tracking-wide",
+                          routes[p.id]?.route === 'relay' ? 'border-yellow-500/30 text-yellow-400' : 'border-brand-neon/30 text-brand-neon'
+                        )}>
+                          {p.name} · {p.connected ? routeLabel(routes[p.id]) : 'Connecting…'}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <button 
@@ -684,6 +694,8 @@ export default function Home() {
                     (Object.values(webrtcRefs.current) as WebRTCManager[]).forEach(rtc => rtc.close());
                     webrtcRefs.current = {};
                     setPeersMap({});
+                    setRoutes({});
+                    peerProgress.current = {};
                     setTransfers({});
                     setTextMessages([]);
                   }}
@@ -703,7 +715,7 @@ export default function Home() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={cn("bg-surface border p-4 rounded-xl flex flex-col gap-4 relative overflow-hidden group transition-all mb-3 w-full shadow-lg", 
-                           task.status === 'cancelled' ? 'border-red-500/30' : 'border-brand-neon/30 hover:border-brand-neon/60 bg-brand-neon/5')}
+                           ['cancelled', 'failed'].includes(task.status) ? 'border-red-500/30' : 'border-brand-neon/30 hover:border-brand-neon/60 bg-brand-neon/5')}
                       >
                         <div className="flex items-center justify-between z-10 relative flex-wrap gap-4">
                           <div className="flex items-center gap-4 overflow-hidden max-w-full">
@@ -715,12 +727,12 @@ export default function Home() {
                               <div className={cn(
                                 "w-12 h-12 flex items-center justify-center flex-shrink-0 rounded-lg border",
                                 task.status === 'completed' ? 'bg-black/20 text-brand-neon border-brand-neon/30' : 
-                                task.status === 'cancelled' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                ['cancelled', 'failed'].includes(task.status) ? 'bg-red-500/10 text-red-500 border-red-500/20' :
                                 'bg-black/20 text-brand-neon border-brand-neon/20'
                               )}>
                                 {task.status === 'completed' ? (
                                   <Check className="w-6 h-6" />
-                                ) : task.status === 'cancelled' ? (
+                                ) : ['cancelled', 'failed'].includes(task.status) ? (
                                   <X className="w-6 h-6" />
                                 ) : (
                                   <FileIcon className="w-6 h-6" />
@@ -733,22 +745,23 @@ export default function Home() {
                                 <span>{task.size ? formatBytes(task.size) : '---'}</span>
                                 <span className={cn(
                                    task.status === 'transferring' ? 'text-brand-neon font-bold' : '',
-                                   task.status === 'cancelled' ? 'text-red-500' : '',
+                                   ['cancelled', 'failed'].includes(task.status) ? 'text-red-500' : '',
                                    task.status === 'paused' ? 'text-yellow-500' : ''
                                 )}>
-                                   {task.status}
-                                   {['transferring', 'paused'].includes(task.status) ? ` (${task.progress.toFixed(0)}%)` : ''}
+                                   {task.status === 'failed' && task.error ? `failed: ${task.error}` : task.status}
+                                   {['transferring', 'paused'].includes(task.status) ? ` (${task.progress.toFixed(task.progress < 10 ? 1 : 0)}%)` : ''}
                                 </span>
-                                <span>{task.isSending ? 'Sent' : 'Received'}</span>
+                                <span>{task.isSending ? 'Sending' : 'Receiving'}</span>
+                                {task.status === 'completed' && task.avgSpeed ? <span>avg {formatBytes(task.avgSpeed)}/s</span> : null}
                               </div>
                             </div>
                           </div>
                           
                           <div className="flex items-center gap-4 flex-shrink-0">
-                            {['transferring', 'paused'].includes(task.status) && (
+                            {['transferring', 'paused', 'queued'].includes(task.status) && (
                                 <div className="flex flex-col items-end mr-4">
                                    <span className="text-xs text-brand-neon font-sans">
-                                     {task.speed ? formatBytes(task.speed) + '/s' : '--/s'}
+                                     {task.status === 'queued' ? 'Waiting…' : task.speed ? formatBytes(task.speed, 1) + '/s' : '--/s'}
                                    </span>
                                    <span className="text-[11px] text-white/50 font-sans">
                                      {task.timeRemaining ? formatTime(task.timeRemaining) + ' left' : '-- left'}
@@ -756,9 +769,9 @@ export default function Home() {
                                 </div>
                             )}
                             
-                            {task.isSending && ['transferring', 'paused'].includes(task.status) && (
+                            {['transferring', 'paused', 'queued'].includes(task.status) && (
                                 <div className="flex items-center gap-1 bg-black/20 p-1 border border-surface-border rounded-lg">
-                                   {task.status === 'transferring' ? (
+                                   {!task.isSending || task.status === 'queued' ? null : task.status === 'transferring' ? (
                                       <button 
                                          onClick={(e) => { e.stopPropagation(); manageTransferLocal(task, 'pause'); }}
                                          className="p-1.5 rounded-md hover:bg-yellow-500/20 hover:text-yellow-500 text-white/50 transition-colors"
@@ -797,7 +810,7 @@ export default function Home() {
                           </div>
                         </div>
                         
-                        {(task.status === 'transferring' || task.status === 'paused') && (
+                        {['transferring', 'paused', 'queued'].includes(task.status) && (
                           <div className="absolute bottom-0 left-0 h-[2px] bg-white/5 w-full">
                             <motion.div 
                               className={cn("h-full", task.status === 'paused' ? 'bg-yellow-500' : 'bg-brand-neon')}
@@ -808,7 +821,7 @@ export default function Home() {
                           </div>
                         )}
                         
-                        {task.status === 'cancelled' && (
+                        {['cancelled', 'failed'].includes(task.status) && (
                            <div className="absolute bottom-0 left-0 h-[2px] bg-red-500 w-full" />
                         )}
                       </motion.div>
