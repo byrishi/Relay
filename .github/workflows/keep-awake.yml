@@ -1,0 +1,21 @@
+name: Keep awake
+
+# Render's free plan sleeps after 15 minutes without traffic, and the first
+# request then waits about a minute. Search crawlers (fetching the sitemap)
+# and first visitors give up before that. A light ping every 10 minutes
+# keeps the one instance awake; 24/7 uses about 744 of the 750 free hours.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping the health check
+        run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 https://relay.rishishah.in/healthz -o /dev/null -w "%{http_code} in %{time_total}s\n"
