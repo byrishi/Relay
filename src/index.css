@@ -104,3 +104,11 @@ body {
 /* markdown tables scroll on narrow screens */
 .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
 .table-wrap table { margin: 0; min-width: 32rem; }
+
+/* Keyboard focus: always visible, never on mouse click */
+:focus-visible { outline: 2px solid #D9F5EC; outline-offset: 3px; border-radius: 6px; }
+button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
+summary::-webkit-details-marker { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

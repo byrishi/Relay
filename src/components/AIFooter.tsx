@@ -13,17 +13,17 @@ export default function AIFooter() {
   return (
     <div className="w-full max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center mb-16 md:mb-24">
       <div className="text-center mb-10">
-        <h3 className="text-white font-pixel-line uppercase tracking-widest text-2xl md:text-3xl mb-4">Ask AI about Relay</h3>
+        <h2 className="text-white font-pixel-line uppercase tracking-widest text-2xl md:text-3xl mb-4">Ask AI about Relay</h2>
         <p className="text-white/70 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">Don’t take our word for it. Ask an AI assistant to explain how Relay works and whether it is safe.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl">
         {tools.map(({ name, href, icon: Icon, body }) => (
-          <a key={name} href={href} target="_blank" rel="noopener noreferrer" aria-label={`Ask ${name} about Relay`}
+          <a key={name} href={href} target="_blank" rel="noopener noreferrer"
             className="group flex items-start p-5 gap-4 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-neon/50 hover:bg-white/10 transition-all backdrop-blur-md">
             <div className="p-3 rounded-xl bg-white/10 shrink-0 border border-white/5 group-hover:border-brand-neon/30"><Icon className="w-6 h-6 text-white" /></div>
             <div className="flex flex-col pt-0.5">
-              <span className="font-pixel-grid tracking-widest text-sm uppercase text-white mb-1.5">{name}</span>
-              <span className="text-xs text-white/55 leading-relaxed">{body}</span>
+              <span className="font-semibold text-white mb-1">Ask {name}<span className="sr-only"> (opens in a new tab)</span></span>
+              <span className="text-xs text-white/75 leading-relaxed">{body}</span>
             </div>
           </a>
         ))}
