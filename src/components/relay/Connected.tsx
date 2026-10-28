@@ -19,7 +19,7 @@ function SafetyDialog({ peer, verified, onVerified, onMismatch, onClose }: {
   return (
     <Dialog title={`Verify ${peer.name}`} onClose={onClose}
       description={<>Compare this number with the one on <span className="text-fg">{peer.name}</span>, in person or on a call. If they match, nobody, not even Relay's server, can read this connection.</>}>
-      <div className="font-mono text-[24px] md:text-[28px] tracking-[0.1em] text-fg text-center py-6 rounded-xl bg-white/[0.03] ring2 select-all" data-testid="safety-number" aria-label={`Safety number ${peer.safety || 'loading'}`}>
+      <div className="font-mono text-[24px] md:text-[28px] tracking-[0.1em] text-fg text-center py-6 rounded-xl bg-tint/[0.03] ring2 select-all" data-testid="safety-number" aria-label={`Safety number ${peer.safety || 'loading'}`}>
         {peer.safety || 'Connecting…'}
       </div>
       {verified
@@ -45,7 +45,7 @@ function ApprovalBanner({ peer, relay }: { peer: Peer; relay: Relay }) {
           Only allow a device you expect. To be sure it's them, check their screen shows <span className="font-mono text-fg whitespace-nowrap">{peer.safety || '…'}</span>.
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 sm:flex gap-2">
         <button onClick={() => relay.approvePeer(peer.clientId, true)} className="btn btn-w btn-lg">Allow</button>
         <button onClick={() => relay.approvePeer(peer.clientId, false)} className="btn btn-d btn-lg">Block</button>
       </div>
@@ -63,27 +63,29 @@ function Header({ relay }: { relay: Relay }) {
   return (
     <section aria-labelledby="link-title" className="flex flex-col md:flex-row md:items-end justify-between gap-5">
       <div className="min-w-0">
-        <h1 id="link-title" className="text-[28px] md:text-[36px] font-semibold tracking-[-0.035em] leading-[1.1]">
+        <h1 id="link-title" className="text-[26px] md:text-[36px] font-semibold tracking-[var(--tr-2)] leading-[1.12] text-balance">
           {names.length ? <>Connected to {names.join(', ')}</> : 'Device joining…'}
         </h1>
         <p className="text-fg-2 text-[14px] mt-2">Encrypted end to end. Room <span className="font-mono text-fg">{relay.roomCode}</span>. You are {relay.deviceName}.</p>
-        <ul className="flex flex-wrap gap-2 mt-4" aria-label="Connected devices">
+        <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-2 mt-4" aria-label="Connected devices">
           {peers.map((p) => (
             <li key={p.clientId}>
               <button onClick={() => setVerifyId(p.clientId)}
-                className={cn('h-8 pl-3 pr-1 rounded-lg text-[12.5px] flex items-center gap-2 bg-white/[0.03] transition-colors hover:bg-white/[0.07]',
-                  p.approved === undefined ? 'shadow-[inset_0_0_0_1px_rgb(247_193_75/0.45)] text-warn' : 'ring2 text-fg-2')}>
-                {isVerified(p) ? <BadgeCheck className="w-3.5 h-3.5 text-ok" aria-hidden="true" /> : <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />}
-                <span className="text-fg">{p.name}</span>
-                <span aria-hidden="true" className="text-fg-3">·</span>
-                <span>{p.approved === undefined ? 'waiting for you' : p.connected ? routeLabel(p.route) : 'Reconnecting…'}</span>
-                <span className={cn('h-6 px-2 rounded-md inline-flex items-center font-medium', isVerified(p) ? 'text-ok bg-ok/10' : 'bg-fg text-bg')}>{isVerified(p) ? 'Verified' : 'Verify'}</span>
+                className={cn('w-full sm:w-auto min-h-11 sm:min-h-8 pl-3 pr-1.5 py-1.5 rounded-xl sm:rounded-lg text-[12.5px] flex items-center gap-2 bg-tint/[0.03] transition-colors hover:bg-tint/[0.07] text-left',
+                  p.approved === undefined ? 'shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-warn)_50%,transparent)] text-warn' : 'ring2 text-fg-2')}>
+                {isVerified(p) ? <BadgeCheck className="w-3.5 h-3.5 text-ok shrink-0" aria-hidden="true" /> : <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />}
+                <span className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                  <span className="text-fg text-[13.5px] sm:text-[12.5px]">{p.name}</span>
+                  <span aria-hidden="true" className="hidden sm:inline text-fg-3">·</span>
+                  <span>{p.approved === undefined ? 'waiting for you' : p.connected ? routeLabel(p.route) : 'Reconnecting…'}</span>
+                </span>
+                <span className={cn('h-7 sm:h-6 px-2.5 sm:px-2 rounded-md inline-flex items-center font-medium shrink-0', isVerified(p) ? 'text-ok bg-ok/10' : 'bg-fg text-bg')}>{isVerified(p) ? 'Verified' : 'Verify'}</span>
               </button>
             </li>
           ))}
         </ul>
       </div>
-      <button onClick={relay.leaveRoom} className="btn btn-d self-start md:self-end">Disconnect</button>
+      <button onClick={relay.leaveRoom} className="btn btn-d h-11 md:h-9 self-start md:self-end">Disconnect</button>
       <AnimatePresence>
         {verifyPeer && (
           <SafetyDialog peer={verifyPeer} verified={isVerified(verifyPeer)}
@@ -125,9 +127,9 @@ function OffersPanel({ relay }: { relay: Relay }) {
       <ul className="mt-4 flex flex-col gap-2">
         {rows.map(({ offer: o, count, size }) => (
           <motion.li key={o.group?.id || o.id} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl ring2 bg-white/[0.02] p-3.5 flex flex-col md:flex-row md:items-center gap-3">
+            className="rounded-xl ring2 bg-tint/[0.02] p-3.5 flex flex-col md:flex-row md:items-center gap-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="w-9 h-9 rounded-lg bg-white/[0.06] flex items-center justify-center text-fg-2 shrink-0">
+              <span className="w-9 h-9 rounded-lg bg-tint/[0.06] flex items-center justify-center text-fg-2 shrink-0">
                 {o.group ? <Folder className="w-4 h-4" aria-hidden="true" /> : <FileIcon className="w-4 h-4" aria-hidden="true" />}
               </span>
               <div className="min-w-0">
@@ -135,7 +137,7 @@ function OffersPanel({ relay }: { relay: Relay }) {
                 <p className="text-[12.5px] text-fg-2">{o.group ? `${count} files, ` : ''}{formatBytes(size)} from {o.peerName}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-center [&>.btn]:h-11 sm:[&>.btn]:h-9">
               {!o.group && disk && <button onClick={() => relay.respondToOffer(o.id, 'save-as', always)} className="btn btn-w"><HardDrive className="w-3.5 h-3.5" aria-hidden="true" />Save as…</button>}
               {o.group && folder && <button onClick={() => relay.respondToOffer(o.id, 'folder')} className="btn btn-w"><FolderUp className="w-3.5 h-3.5" aria-hidden="true" />Save to folder…</button>}
               <button onClick={() => relay.respondToOffer(o.id, 'accept', always)} className={cn('btn', (o.group ? folder : disk) ? 'btn-g' : 'btn-w')}>Accept</button>
@@ -238,7 +240,7 @@ function TransferRow({ row, relay }: { row: Row; relay: Relay }) {
         <img src={t.previewUrl} alt="" className="w-10 h-10 object-cover rounded-lg ring2" />
       ) : (
         <span className={cn('w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-semibold',
-          t.status === 'completed' ? 'bg-ok/10 text-ok' : bad ? 'bg-danger/10 text-danger' : 'bg-white/[0.06] text-fg-2')} aria-hidden="true">
+          t.status === 'completed' ? 'bg-ok/10 text-ok' : bad ? 'bg-danger/10 text-danger' : 'bg-tint/[0.06] text-fg-2')} aria-hidden="true">
           {t.status === 'completed' ? <Check className="w-4 h-4" /> : bad ? <X className="w-4 h-4" /> : t.status === 'interrupted' ? <RotateCw className="w-4 h-4 animate-spin [animation-duration:3s]" /> : row.group ? <Folder className="w-4 h-4" /> : ext(t.name)}
         </span>
       )}
@@ -267,12 +269,12 @@ function TransferRow({ row, relay }: { row: Row; relay: Relay }) {
             {active && (
               <span className="flex items-center gap-0.5">
                 {t.isSending && !row.group && t.status === 'transferring' && (
-                  <button onClick={() => relay.manageTransfer(t, 'pause')} title="Pause" aria-label={`Pause ${t.name}`} className="p-2 rounded-lg text-fg-2 hover:text-fg hover:bg-white/[0.06]"><Pause className="w-4 h-4" /></button>
+                  <button onClick={() => relay.manageTransfer(t, 'pause')} title="Pause" aria-label={`Pause ${t.name}`} className="p-2 rounded-lg text-fg-2 hover:text-fg hover:bg-tint/[0.06]"><Pause className="w-4 h-4" /></button>
                 )}
                 {t.isSending && !row.group && t.status === 'paused' && (
-                  <button onClick={() => relay.manageTransfer(t, 'resume')} title="Resume" aria-label={`Resume ${t.name}`} className="p-2 rounded-lg text-fg-2 hover:text-fg hover:bg-white/[0.06]"><Play className="w-4 h-4" /></button>
+                  <button onClick={() => relay.manageTransfer(t, 'resume')} title="Resume" aria-label={`Resume ${t.name}`} className="p-2 rounded-lg text-fg-2 hover:text-fg hover:bg-tint/[0.06]"><Play className="w-4 h-4" /></button>
                 )}
-                <button onClick={() => relay.manageTransfer(t, 'cancel')} title="Cancel" aria-label={`Cancel ${t.name}`} className="p-2 rounded-lg text-fg-2 hover:text-danger hover:bg-white/[0.06]"><X className="w-4 h-4" /></button>
+                <button onClick={() => relay.manageTransfer(t, 'cancel')} title="Cancel" aria-label={`Cancel ${t.name}`} className="p-2 rounded-lg text-fg-2 hover:text-danger hover:bg-tint/[0.06]"><X className="w-4 h-4" /></button>
               </span>
             )}
             {!t.isSending && t.status === 'completed' && !row.group && t.url && (
@@ -280,12 +282,12 @@ function TransferRow({ row, relay }: { row: Row; relay: Relay }) {
             )}
             {!t.isSending && t.status === 'completed' && row.group && !t.savedToDisk && <GroupDownload tasks={row.group.tasks} name={t.name} />}
             {!active && (
-              <button onClick={() => relay.dismissTransfer(t.id)} title="Remove from list" aria-label={`Remove ${t.name} from the list`} className="p-2 rounded-lg text-fg-3 hover:text-fg hover:bg-white/[0.06]"><X className="w-3.5 h-3.5" /></button>
+              <button onClick={() => relay.dismissTransfer(t.id)} title="Remove from list" aria-label={`Remove ${t.name} from the list`} className="p-2 rounded-lg text-fg-3 hover:text-fg hover:bg-tint/[0.06]"><X className="w-3.5 h-3.5" /></button>
             )}
           </div>
         </div>
         {moving && (
-          <span className="mt-2.5 block h-1.5 rounded-full bg-white/[0.07] overflow-hidden" aria-hidden="true">
+          <span className="mt-2.5 block h-1.5 rounded-full bg-tint/[0.07] overflow-hidden" aria-hidden="true">
             <span className={cn('block h-full rounded-full transition-[width] duration-300', t.status === 'transferring' ? 'grad' : 'bg-warn')} style={{ width: `${t.progress}%` }} />
           </span>
         )}
@@ -312,7 +314,7 @@ function HistoryPanel({ relay }: { relay: Relay }) {
       </div>
       <AnimatePresence>
         {open && (
-          <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3 flex flex-col divide-y divide-white/[0.06] overflow-hidden">
+          <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3 flex flex-col divide-y divide-tint/[0.06] overflow-hidden">
             {relay.history.length === 0 && <li className="text-[13px] text-fg-3 py-3">Nothing yet. Only names, sizes and speeds are stored, never file contents.</li>}
             {relay.history.slice(0, 50).map((h) => (
               <li key={h.id + h.at} className="py-2.5 flex items-center justify-between gap-3 text-[13px]">
@@ -363,20 +365,23 @@ export default function Connected({ relay }: { relay: Relay }) {
 
   return (
     <div className="relative">
-      <Atmosphere />
-      <div className="relative z-10 max-w-[1080px] mx-auto px-6 pt-10 md:pt-14 pb-10">
+      <div className="relative z-10 max-w-[1080px] mx-auto px-4 md:px-6 pt-8 md:pt-14 pb-10">
         <Header relay={relay} />
         <Announcer relay={relay} />
 
         {/* The link: the two marks and the stream between them are drawn behind this band */}
-        <div className="h-[200px] md:h-[240px] flex flex-col items-center justify-center text-center select-none" aria-hidden="true">
+        <div className="relative h-[180px] md:h-[240px] flex flex-col items-center justify-center text-center select-none" aria-hidden="true">
+          {/* the two devices' marks and the stream between them, centred on this band */}
+          <div className="absolute -z-10 left-1/2 -translate-x-1/2 w-screen -top-[150px] -bottom-[150px] pointer-events-none [mask-image:linear-gradient(to_bottom,transparent,black_28%,black_72%,transparent)]">
+            <Atmosphere />
+          </div>
           {speed > 0 ? (
             <>
-              <p className="text-[56px] md:text-[80px] font-semibold tracking-[-0.05em] leading-none tabular-nums [text-shadow:0_0_40px_rgb(5_7_12/0.9)]">{whole}<span className="text-[22px] md:text-[28px] text-fg-2 font-medium tracking-[-0.02em] ml-2">{frac}/s</span></p>
-              <p className="mt-3 text-[14px] text-fg-2">Sending directly, encrypted</p>
+              <p className="relative text-[52px] md:text-[80px] font-semibold tracking-[var(--tr-1)] leading-none tabular-nums [text-shadow:0_0_40px_var(--color-bg)]">{whole}<span className="text-[22px] md:text-[28px] text-fg-2 font-medium tracking-[-0.02em] ml-2">{frac}/s</span></p>
+              <p className="relative mt-3 text-[14px] text-fg-2">Sending directly, encrypted</p>
             </>
           ) : (
-            <p className="h-9 px-4 rounded-full bg-bg/80 ring2 text-[13.5px] text-fg-2 flex items-center gap-2.5"><span className="w-1.5 h-1.5 rounded-full bg-ok animate-breathe" />Ready. Drop, paste or choose files.</p>
+            <p className="relative h-9 px-4 rounded-full bg-bg/80 ring2 text-[13.5px] text-fg-2 flex items-center gap-2.5"><span className="w-1.5 h-1.5 rounded-full bg-ok animate-breathe" />Ready. Drop, paste or choose files.</p>
           )}
         </div>
 
@@ -397,15 +402,15 @@ export default function Connected({ relay }: { relay: Relay }) {
             <section aria-labelledby="send-title" className="p-5 md:p-6">
               <h2 id="send-title" className="sr-only">Send files</h2>
               <div onClick={(e) => { if (e.target === e.currentTarget) fileInput.current?.click(); }}
-                className="rounded-xl border border-dashed border-white/[0.16] hover:border-acc/60 bg-white/[0.015] transition-colors flex flex-col md:flex-row items-center gap-4 md:gap-6 px-6 py-7 cursor-pointer">
-                <span className="w-11 h-11 rounded-xl ring2 bg-white/[0.04] flex items-center justify-center shrink-0 pointer-events-none"><UploadCloud className="w-5 h-5 text-fg" aria-hidden="true" /></span>
+                className="rounded-xl border border-dashed border-tint/[0.16] hover:border-acc/60 bg-tint/[0.015] transition-colors flex flex-col md:flex-row items-center gap-4 md:gap-6 px-5 md:px-6 py-6 md:py-7 cursor-pointer">
+                <span className="w-11 h-11 rounded-xl ring2 bg-tint/[0.04] flex items-center justify-center shrink-0 pointer-events-none"><UploadCloud className="w-5 h-5 text-fg" aria-hidden="true" /></span>
                 <div className="flex-1 text-center md:text-left pointer-events-none">
-                  <p className="text-[16px] font-medium tracking-[-0.015em]">Drop files or folders, or paste with <span className="kbd">Ctrl/⌘ V</span></p>
+                  <p className="text-[16px] font-medium tracking-[-0.015em]"><span className="pointer-coarse:hidden">Drop files or folders, or paste with <span className="kbd">Ctrl/⌘ V</span></span><span className="hidden pointer-coarse:inline">Send more files</span></p>
                   <p className="text-[13.5px] text-fg-3 mt-1">They go only to devices you allowed, and each one must accept.</p>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => fileInput.current?.click()} className="btn btn-w"><Plus className="w-4 h-4" aria-hidden="true" />Choose files</button>
-                  <button onClick={() => folderInput.current?.click()} className="btn btn-g"><FolderUp className="w-4 h-4" aria-hidden="true" />Choose a folder</button>
+                <div className="w-full md:w-auto grid grid-cols-1 sm:flex gap-2">
+                  <button onClick={() => fileInput.current?.click()} className="btn btn-w h-11 md:h-9"><Plus className="w-4 h-4" aria-hidden="true" />Choose files</button>
+                  <button onClick={() => folderInput.current?.click()} className="btn btn-g h-11 md:h-9 pointer-coarse:hidden"><FolderUp className="w-4 h-4" aria-hidden="true" />Choose a folder</button>
                 </div>
               </div>
               <input ref={fileInput} type="file" multiple className="sr-only" tabIndex={-1} aria-hidden="true" data-testid="file-input"
@@ -420,19 +425,19 @@ export default function Connected({ relay }: { relay: Relay }) {
               <form onSubmit={(e) => { e.preventDefault(); if (relay.sendText(text)) setText(''); }} className="mt-3 flex gap-2">
                 <label htmlFor="msg" className="sr-only">Message to send</label>
                 <input id="msg" autoComplete="off" type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Send a message or link…"
-                  className="field flex-1 min-w-0 h-11 px-4 text-[14.5px]" />
+                  className="field flex-1 min-w-0 h-11 px-4 text-[16px] md:text-[14.5px]" />
                 <button type="submit" disabled={!text.trim()} className="btn btn-w h-11 px-5">Send</button>
               </form>
 
               {relay.messages.length > 0 && (
                 <ul className="mt-4 flex flex-col gap-2" aria-label="Messages">
                   {relay.messages.map((m) => (
-                    <li key={m.id} className="rounded-xl ring2 bg-white/[0.02] p-3.5 flex gap-3 items-start" data-testid="message">
+                    <li key={m.id} className="rounded-xl ring2 bg-tint/[0.02] p-3.5 flex gap-3 items-start" data-testid="message">
                       <div className="flex-1 min-w-0">
                         <p className="text-[14.5px] text-fg break-words whitespace-pre-wrap">{m.text}</p>
                         <p className="text-[12px] text-fg-3 mt-1">{new Date(m.timestamp).toLocaleTimeString()}, {m.isSending ? 'sent' : `from ${m.from || 'peer'}`}{m.kind === 'clip' ? ', clipboard' : ''}</p>
                       </div>
-                      <button onClick={() => navigator.clipboard?.writeText(m.text)} title="Copy" aria-label="Copy message" className="p-2 rounded-lg text-fg-2 hover:text-fg hover:bg-white/[0.06]"><Copy className="w-4 h-4" /></button>
+                      <button onClick={() => navigator.clipboard?.writeText(m.text)} title="Copy" aria-label="Copy message" className="p-2 rounded-lg text-fg-2 hover:text-fg hover:bg-tint/[0.06]"><Copy className="w-4 h-4" /></button>
                     </li>
                   ))}
                 </ul>
@@ -442,7 +447,7 @@ export default function Connected({ relay }: { relay: Relay }) {
             <div className="px-5 md:px-6 py-4 border-t border-line flex flex-col gap-3">
               <label className="flex items-center gap-2 text-[13px] text-fg-2 cursor-pointer select-none w-fit">
                 <input type="checkbox" checked={relay.clipboardSync} onChange={(e) => relay.setClipboardSync(e.target.checked)} className="w-4 h-4" />
-                <Clipboard className="w-3.5 h-3.5" aria-hidden="true" /> Sync clipboard with approved devices <span className="text-fg-3">(beta, your browser may ask for permission)</span>
+                <Clipboard className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /><span>Sync clipboard with approved devices <span className="text-fg-3 whitespace-nowrap">(beta, may ask for permission)</span></span>
               </label>
               <HistoryPanel relay={relay} />
             </div>

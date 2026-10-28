@@ -8,7 +8,8 @@ export const MARK_STOPS_DEEP: [number, string][] = [[0, '#3F46D6'], [0.55, '#744
 
 /**
  * The original Relay "R": 34 horizontal scan-lines.
- * `gradient` paints it in the brand gradient; otherwise it uses currentColor.
+ * `gradient` paints it in the brand gradient (colours follow the active design);
+ * `deep` forces the darker stops, for light surfaces such as the QR card.
  */
 export function RelayMark({ className = '', title, gradient = true, deep = false }: { className?: string; title?: string; gradient?: boolean; deep?: boolean }) {
   const id = useId().replace(/:/g, '');
@@ -18,7 +19,9 @@ export function RelayMark({ className = '', title, gradient = true, deep = false
       {gradient && (
         <defs>
           <linearGradient id={`rg${id}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={h}>
-            {(deep ? MARK_STOPS_DEEP : MARK_STOPS).map(([o, c]) => <stop key={o} offset={o} stopColor={c} />)}
+            {deep
+              ? MARK_STOPS_DEEP.map(([o, c]) => <stop key={o} offset={o} stopColor={c} />)
+              : MARK_STOPS.map(([o], i) => <stop key={o} offset={o} style={{ stopColor: `var(--mark-${i + 1})` }} />)}
           </linearGradient>
         </defs>
       )}

@@ -108,7 +108,7 @@ const md = new Marked({
 
 export function renderMarkdown(body: string): string {
   const html = md.parse(body, { async: false }) as string;
-  return html.replace(/<table>/g, '<div class="table-wrap"><table>').replace(/<\/table>/g, '</table></div>');
+  return html.replace(/<table>/g, '<div class="table-wrap" tabindex="0" role="region" aria-label="Table"><table>').replace(/<\/table>/g, '</table></div>');
 }
 
 export const urlFor = (slug: string) => (slug ? `${SITE.url}/${slug}` : `${SITE.url}/`);

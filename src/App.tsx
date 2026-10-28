@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
-import { Menu, X, Github } from 'lucide-react';
+import { Menu, X, Github, Moon, Sun } from 'lucide-react';
 
 import Home from './pages/Home';
 import VerifyIdentity from './pages/VerifyIdentity';
@@ -11,6 +11,7 @@ import { RelayLogo } from './brand/Logo';
 import { applyHead } from './content/head';
 import { HOME, SITE } from './content/site';
 import { atmosphere, setAtmosphere } from './lib/atmosphere';
+import { useDesign, setDesign, Design } from './lib/design';
 
 // Articles and content pages (markdown) load on demand, keeping the app bundle small.
 const DocRoute = lazy(() => import('./pages/Docs').then((m) => ({ default: m.DocRoute })));
@@ -23,6 +24,22 @@ const NAV = [
   { to: '/verify-identity', label: 'Verify' },
 ];
 
+/** Lets visitors flip between the two designs while we choose one. */
+function DesignSwitch({ className = '' }: { className?: string }) {
+  const design = useDesign();
+  const opts: [Design, string, typeof Moon][] = [['dark', 'Dark', Moon], ['light', 'Light', Sun]];
+  return (
+    <div role="group" aria-label="Design" className={`inline-flex p-[3px] rounded-full bg-tint/[0.05] ring ${className}`}>
+      {opts.map(([d, label, Icon]) => (
+        <button key={d} type="button" onClick={() => setDesign(d)} aria-pressed={design === d}
+          className={`h-[28px] px-3 rounded-full text-[13px] inline-flex items-center gap-1.5 transition-colors ${design === d ? 'bg-bg text-fg shadow-[0_1px_3px_rgb(0_0_0/0.25)] ring' : 'text-fg-3 hover:text-fg'}`}>
+          <Icon className="w-3.5 h-3.5" aria-hidden="true" />{label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Header() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -31,24 +48,28 @@ function Header() {
     <header className="sticky top-0 z-50 bg-bg/70 backdrop-blur-xl border-b border-line">
       <div className="mx-auto max-w-[1200px] h-16 px-6 flex items-center justify-between gap-6">
         <Link to="/" aria-label="Relay home" className="flex items-center rounded-lg"><RelayLogo /></Link>
-        <nav className="hidden md:flex items-center gap-8 text-[14px]" aria-label="Main">
+        <nav className="hidden lg:flex items-center gap-8 text-[14px]" aria-label="Main">
           {NAV.map(({ to, label }) => (
             <Link key={to} to={to} aria-current={location.pathname === to ? 'page' : undefined}
               className={`transition-colors ${location.pathname === to ? 'text-fg' : 'text-fg-2 hover:text-fg'}`}>{label}</Link>
           ))}
         </nav>
-        <div className="hidden md:flex items-center gap-2.5">
+        <div className="hidden lg:flex items-center gap-2.5">
+          <DesignSwitch />
           <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="btn btn-g">
             <Github className="w-4 h-4" aria-hidden="true" />GitHub<span className="sr-only"> (opens in a new tab)</span>
           </a>
           <Link to="/" className="btn btn-w">Start sending</Link>
         </div>
-        <button onClick={() => setOpen(!open)} className="md:hidden w-10 h-10 -mr-2 rounded-lg flex items-center justify-center text-fg" aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? 'Close menu' : 'Open menu'}>
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="lg:hidden flex items-center gap-1 -mr-2">
+          <DesignSwitch />
+          <button onClick={() => setOpen(!open)} className="w-11 h-11 rounded-lg flex items-center justify-center text-fg" aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? 'Close menu' : 'Open menu'}>
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
       {open && (
-        <nav id="mobile-nav" className="md:hidden px-6 pb-6 flex flex-col text-[17px]" aria-label="Mobile">
+        <nav id="mobile-nav" className="lg:hidden px-6 pb-6 flex flex-col text-[17px]" aria-label="Mobile">
           {NAV.map(({ to, label }) => <Link key={to} to={to} className="py-3.5 border-b border-line text-fg">{label}</Link>)}
           <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="py-3.5 border-b border-line text-fg">GitHub</a>
           <Link to="/" className="btn btn-w btn-lg mt-5">Start sending</Link>
@@ -105,7 +126,7 @@ function Footer() {
           ))}
         </div>
         <div className="max-w-[1200px] mx-auto px-6 py-8 border-t border-line flex flex-col md:flex-row gap-4 md:items-center justify-between text-[13px] text-fg-3">
-          <p>© 2026 Relay. MIT licensed. Built by <a href={SITE.author.url} target="_blank" rel="noopener noreferrer" className="text-fg-2 underline underline-offset-4 decoration-white/25 hover:text-fg">{SITE.author.name}</a>.</p>
+          <p>© 2026 Relay. MIT licensed. Built by <a href={SITE.author.url} target="_blank" rel="noopener noreferrer" className="text-fg-2 underline underline-offset-4 decoration-tint/25 hover:text-fg">{SITE.author.name}</a>.</p>
           <p className="flex flex-wrap gap-x-6 gap-y-2">
             <MotionToggle />
             <Link to="/self-hosted-file-sharing" className="hover:text-fg">Self-host</Link>
