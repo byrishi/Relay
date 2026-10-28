@@ -42,13 +42,13 @@ export function DocsIndex() {
 export function NotFound() {
   useEffect(() => { document.title = 'Page not found | Relay'; }, []);
   return (
-    <div className="w-full max-w-xl mx-auto px-6 py-28 text-center text-white">
-      <p className="font-pixel-square text-6xl text-white/20">404</p>
-      <h1 className="text-3xl font-bold mt-6">This page drifted away</h1>
-      <p className="text-white/60 mt-4">The link may be old. Try the guides, or start a transfer.</p>
+    <div className="w-full max-w-xl mx-auto px-6 py-24 text-center text-ink">
+      <p className="font-serif italic text-[120px] leading-none text-[#7A8396]" aria-hidden="true">404</p>
+      <h1 className="text-4xl font-semibold tracking-tight mt-4">This page <em className="font-serif italic font-normal">drifted away</em></h1>
+      <p className="text-ink-2 text-lg mt-4">The link may be old. Try the guides, or start a transfer.</p>
       <div className="flex gap-3 justify-center mt-8">
-        <Link to="/" className="px-6 py-3 rounded-lg bg-brand-neon text-black font-semibold">Open Relay</Link>
-        <Link to="/articles" className="px-6 py-3 rounded-lg bg-white/10 text-white">All guides</Link>
+        <Link to="/" className="btn-ink h-12 px-6">Open Relay</Link>
+        <Link to="/articles" className="btn-line h-12 px-6">All guides</Link>
       </div>
     </div>
   );

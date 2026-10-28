@@ -1,20 +1,20 @@
 import { useEffect, useRef } from 'react';
 import { atmosphere } from '../lib/atmosphere';
+import { MARK_ASPECT, MARK_BARS } from '../brand/mark';
 
 /**
- * Atmosphere — full-screen WebGL2 luminous particle scene.
+ * Atmosphere — "Daylight". A pointillist WebGL2 scene on warm paper.
  *
- *  • a point-cloud dreamscape (rolling dunes drifting toward the viewer)
- *  • floating motes in volumetric haze
- *  • a light stream that morphs with app state:
- *      landing   → aurora ribbon across the sky
- *      lobby     → a breathing portal ring, waiting for a peer
- *      connected → two luminous nodes joined by a river of light whose
- *                  flow follows the real transfer speed
+ *  • the original Relay "R" rebuilt from thousands of dots (indigo → coral),
+ *    its top scan-lines slowly evaporating upwards; it dissolves as you scroll
+ *  • a meadow of dotted stems swaying in the wind, with coral/gold blossoms
+ *  • faint sweeping arcs of light in the sky
+ *  • when two devices connect the R splits in two and a river of light flows
+ *    between them, faster as the real transfer speed rises
  *
- * Rendering: additive gaussian point sprites (cleared every frame, no trails)
- * → separable blur (soft bloom) → composite with haze, tone map, vignette, grain.
- * All particle motion lives in the vertex shader; the CPU only updates uniforms.
+ * Dots are alpha-blended (pre-multiplied) into an off-screen buffer, blurred into a
+ * soft glow, then composited over a hazy paper gradient. All motion is in the vertex
+ * shader; the CPU only updates a few uniforms.
  */
 
 const NOISE = /* glsl */ `
@@ -40,133 +40,160 @@ float snoise(vec3 v){
   p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
   vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);m=m*m;
   return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-}`;
+}
+float hash1(float n){ return fract(sin(n * 12.9898) * 43758.5453); }`;
 
 const POINT_VS = /* glsl */ `#version 300 es
 precision highp float;
 in vec4 aSeed;
-in float aKind;          // 0 terrain · 1 motes · 2 stream
-uniform float uTime, uAspect, uPixel, uEnergy, uScroll, uPeers;
+in float aKind;   // 0 meadow · 1 mark A · 2 sky · 3 mark B · 4 stream / mist
+in vec2 aMark;    // position inside the R (0..1, y down)
+uniform float uTime, uAspect, uPixel, uEnergy, uScroll, uWide, uQuiet;
 uniform vec2 uPointer;
-uniform vec3 uMode;      // weights: landing, lobby, connected
-out vec3 vColor;
-out float vAlpha;
+uniform vec3 uMode;    // landing, lobby, connected
+out vec4 vColor;
+out float vStreak;
 ${NOISE}
 
-const vec3 DEEP  = vec3(0.30, 0.45, 1.00);
-const vec3 IVORY = vec3(1.00, 0.95, 0.86);
-const vec3 PEACH = vec3(1.00, 0.66, 0.52);
-const vec3 MINT  = vec3(0.55, 1.00, 0.88);
-const vec3 LILAC = vec3(0.72, 0.62, 1.00);
+const vec3 INDIGO = vec3(0.294, 0.322, 0.878);
+const vec3 VIOLET = vec3(0.545, 0.361, 0.965);
+const vec3 CORAL  = vec3(1.000, 0.478, 0.271);
+const vec3 NAVY   = vec3(0.196, 0.290, 0.392);
+const vec3 GOLD   = vec3(0.949, 0.702, 0.239);
+const float RA = ${MARK_ASPECT.toFixed(4)};
 
-vec3 bezier(vec3 a, vec3 b, vec3 c, float t){ float u=1.-t; return u*u*a + 2.*u*t*b + t*t*c; }
+vec3 dawn(float k) { return k < 0.5 ? mix(INDIGO, VIOLET, k * 2.0) : mix(VIOLET, CORAL, (k - 0.5) * 2.0); }
+vec3 bez(vec3 a, vec3 b, vec3 c, float t) { float u = 1.0 - t; return u*u*a + 2.0*u*t*b + t*t*c; }
 
-void main(){
+void main() {
   float t = uTime;
-  vec3 p; vec3 col; float size; float alpha;
+  vec3 p; vec3 col; float a; float size; float streak = 0.0;
+
+  // where the R sits in each state
+  vec3 cLand  = vec3(mix(0.0, 2.3, uWide), mix(1.9, 0.95, uWide), -5.0);
+  float sLand = mix(1.45, 2.55, uWide);
+  vec3 cLobby = vec3(0.0, 0.9, -5.8);
+  float sLobby = mix(2.7, 3.8, uWide);
+  vec3 cA = vec3(-mix(1.2, max(3.8, uAspect * 3.3), uWide), mix(2.6, 0.95, uWide), -5.8);
+  vec3 cB = vec3(-cA.x, cA.y, cA.z);
+  float sConn = mix(0.8, 1.55, uWide);
 
   if (aKind < 0.5) {
-    // ── Dreamscape terrain: an endless point-cloud dune field drifting toward us
-    float depth = 16.0;
-    float z = -mod(aSeed.y * depth - t * 0.12, depth) - 0.6;
-    float x = (aSeed.x * 2.0 - 1.0) * (2.0 + (-z) * 0.9);
-    float n = snoise(vec3(x * 0.22, z * 0.22 + t * 0.012, 0.0));
-    float n2 = snoise(vec3(x * 0.8, z * 0.8, t * 0.05));
-    float ridge = 1.0 - abs(n);
-    float y = -1.05 + ridge * ridge * 0.75 + n2 * 0.06;
-    p = vec3(x, y, z);
-    float near = smoothstep(-0.6, -2.0, z);
-    float far  = smoothstep(-depth - 0.6, -depth * 0.55, z);
-    float crest = smoothstep(0.55, 0.95, ridge);
-    col = mix(DEEP, mix(IVORY, PEACH, aSeed.z), crest * 0.85);
-    col = mix(col, LILAC, smoothstep(-6.0, -15.0, z) * 0.5);
-    alpha = near * far * (0.22 + crest * 0.6) * (1.0 - 0.35 * uMode.z - 0.2 * uMode.y);
-    size = 1.6 + aSeed.w * 1.6 + crest * 1.5;
-  } else if (aKind < 1.5) {
-    // ── Motes suspended in haze, drifting on slow noise currents
-    vec3 base = (aSeed.xyz * 2.0 - 1.0) * vec3(7.0, 2.4, 7.0) + vec3(0.0, 0.6, -6.0);
-    vec3 q = base * 0.25 + t * 0.03;
-    p = base + vec3(snoise(q), snoise(q + 17.1), snoise(q + 31.7)) * 0.55;
-    float twinkle = 0.55 + 0.45 * sin(t * (0.6 + aSeed.w * 1.6) + aSeed.x * 40.0);
-    col = mix(IVORY, MINT, aSeed.w * 0.6);
-    alpha = 0.12 + 0.35 * twinkle * aSeed.w;
-    size = 1.0 + aSeed.w * 2.2;
-  } else {
-    // ── The light stream: one particle set, three choreographies, blended by mode
-    float s = fract(aSeed.x + t * (0.012 + uEnergy * 0.08));
-    float jitter = snoise(vec3(aSeed.y * 9.0, s * 6.0, t * 0.2));
-
-    // landing: aurora curtain across the sky
-    vec3 aur = vec3(mix(-7.5, 7.5, s),
-                    1.25 + 0.45 * sin(s * 7.0 + t * 0.15) + aSeed.y * 0.9 * (0.6 + 0.4 * sin(s * 13.0 - t * 0.3)),
-                    -8.0 + 2.0 * sin(s * 3.1 + t * 0.07));
-    aur += vec3(0.0, jitter * 0.12, jitter * 0.3);
-
-    // lobby: breathing portal ring
-    float dir = aSeed.z > 0.5 ? 1.0 : -1.0;
-    float ang = aSeed.x * 6.2832 + t * 0.35 * dir * (0.6 + aSeed.w);
-    float rad = 2.35 + 0.08 * sin(t * 1.4) + jitter * 0.1 + (aSeed.y - 0.5) * 0.2;
-    vec3 ring = vec3(cos(ang) * rad * 1.15, 0.45 + sin(ang) * rad, -4.6 + (aSeed.w - 0.5) * 0.25);
-
-    // connected: luminous nodes with a river of light between them
-    // nodes sit outside the UI column; the river arcs high over the content
-    vec3 A = vec3(-4.4, 0.55, -4.6);
-    vec3 B = vec3( 4.4, 0.55, -4.6);
-    vec3 Cc = vec3(0.0, 4.4 + uEnergy * 0.3, -5.4);
-    float flowS = fract(aSeed.x + t * (0.05 + uEnergy * 0.55));
-    float env = sin(flowS * 3.14159);
-    vec3 river = bezier(A, Cc, B, flowS);
-    float tube = (0.035 + 0.07 * (1.0 - uEnergy)) * env;
-    river += vec3(0.0, cos(aSeed.y * 6.2832), sin(aSeed.y * 6.2832)) * tube * (0.4 + aSeed.w)
-           + vec3(0.0, jitter, jitter) * 0.05;
-    if (aSeed.z < 0.22) {
-      // a fifth of the stream gathers into the two orbs
-      vec3 centre = aSeed.z < 0.11 ? A : B;
-      float a2 = aSeed.y * 6.2832 + t * (0.4 + aSeed.w);
-      float r2 = 0.12 + aSeed.w * 0.3;
-      float e2 = acos(aSeed.x * 2.0 - 1.0);
-      river = centre + vec3(sin(e2) * cos(a2), cos(e2), sin(e2) * sin(a2)) * r2;
+    // ── meadow: dotted stems swaying in the wind, some crowned with blossoms
+    float stem = floor(aSeed.x * 900.0);
+    float h1 = hash1(stem + 1.7), h2 = hash1(stem + 9.3), h3 = hash1(stem + 4.1);
+    vec2 b = vec2((h1 * 2.0 - 1.0) * 9.5, -1.6 - h2 * 13.0);
+    float hgt = 0.35 + hash1(stem + 2.9) * 0.75;
+    float s = aSeed.z;
+    float wind = sin(t * 0.8 + b.x * 0.6 + b.y * 0.3) * 0.6 + snoise(vec3(b * 0.3, t * 0.15)) * 0.6;
+    vec3 tip = vec3(b.x + wind * 0.22 * hgt, -1.25 + hgt, b.y);
+    p = vec3(b.x + wind * s * s * 0.22 * hgt, -1.25 + s * hgt, b.y);
+    bool flower = h3 > 0.78 && aSeed.w > 0.72;
+    if (flower) {
+      float th = aSeed.y * 6.2832;
+      float rr = (0.03 + aSeed.z * 0.13) * hgt;
+      p = tip + vec3(cos(th) * rr, sin(th) * rr * 0.85 + rr * 0.35, 0.0);
+      col = mix(CORAL, GOLD, hash1(stem + 5.5));
+      a = 0.85; size = 1.8 + aSeed.w * 1.4;
+    } else {
+      col = mix(NAVY, INDIGO, s * 0.75);
+      a = 0.22 + s * 0.38; size = 0.9 + s * 0.7; streak = 0.6;
     }
+    a *= 1.0 - uScroll * 0.3;
+  } else if (aKind < 1.5 || (aKind > 2.5 && aKind < 3.5)) {
+    // ── the Relay R, made of dots
+    bool isB = aKind > 2.5;
+    vec3 c = cLand * uMode.x + cLobby * uMode.y + (isB ? cB : cA) * uMode.z;
+    float s = sLand * uMode.x + sLobby * uMode.y + sConn * uMode.z;
+    vec2 m = aMark;
+    vec3 base = c + vec3((m.x - 0.5) * s * RA, (0.5 - m.y) * s, (aSeed.z - 0.5) * 0.06 * s);
+    base.x += sin(t * 0.6 + m.y * 9.0) * 0.01 * s;
 
-    p = aur * uMode.x + ring * uMode.y + river * uMode.z;
-    vec3 cAur = mix(MINT, LILAC, aSeed.y);
-    vec3 cRing = mix(IVORY, MINT, aSeed.w);
-    vec3 cRiver = mix(mix(IVORY, PEACH, aSeed.w * 0.6), MINT, uEnergy * 0.6);
-    col = cAur * uMode.x + cRing * uMode.y + cRiver * uMode.z;
-    alpha = (0.35 * uMode.x * (0.4 + 0.6 * aSeed.y)) + 0.8 * uMode.y + (0.45 + uEnergy * 0.5) * uMode.z;
-    size = 1.6 + aSeed.w * 2.4 + uEnergy * 1.2 * uMode.z;
+    // the top scan-lines keep evaporating upwards
+    float evap = step(aSeed.w, 0.24) * smoothstep(0.6, 0.0, m.y);
+    float r = fract(aSeed.x * 7.0 + t * 0.035);
+    vec3 rise = vec3(snoise(vec3(aSeed.xy * 8.0, t * 0.1)) * 0.14 * s, r * r * 0.95 * s, 0.0);
+
+    // scrolling away dissolves the whole mark into drifting dust
+    float d = clamp(uScroll * 1.3, 0.0, 1.0) * uMode.x;
+    vec3 drift = vec3(snoise(vec3(aSeed.yz * 5.0, t * 0.05)), 0.0, snoise(vec3(aSeed.zx * 5.0, t * 0.05))) * 0.9 * s * d
+               + vec3(0.0, aSeed.y * 1.6 * s * d, 0.0);
+    p = base + rise * evap + drift;
+    a = (0.92 - evap * r * 0.92) * (1.0 - d * 0.85) * (1.0 - uMode.y * 0.35) * (1.0 - uQuiet * 0.72);
+    float k = clamp(m.y * 0.9 + (aSeed.y - 0.5) * 0.22 - evap * r * 0.3, 0.0, 1.0);
+    col = dawn(k);
+    if (aSeed.z > 0.9) col = mix(col, NAVY, 0.65);
+    size = 1.2 + aSeed.w * 1.3;
+    streak = step(0.55, aSeed.y);
+  } else if (aKind < 2.5) {
+    // ── sky: sweeping arcs of light and a few floating motes
+    if (aSeed.w > 0.82) {
+      vec3 q = (aSeed.xyz * 2.0 - 1.0) * vec3(8.0, 2.4, 6.0) + vec3(0.0, 1.8, -7.0);
+      q += vec3(snoise(q * 0.2 + t * 0.03), snoise(q * 0.2 + 7.0 + t * 0.03), 0.0) * 0.4;
+      p = q; col = mix(INDIGO, CORAL, aSeed.x); a = 0.28; size = 1.0 + aSeed.z * 1.6;
+    } else {
+      float rad = 3.0 + aSeed.x * 6.5;
+      float ang = aSeed.y * 6.2832 + t * (0.03 / (0.5 + aSeed.x));
+      float keep = step(fract(aSeed.y * 3.0 + aSeed.x * 0.7), 0.42);
+      vec3 cc = vec3(mix(0.5, 2.0, uWide), 4.0, -15.0);
+      p = cc + vec3(cos(ang) * rad * 1.7, sin(ang) * rad * 0.38, sin(ang) * 0.8);
+      col = mix(GOLD, CORAL, aSeed.z) * 0.95 + 0.05;
+      a = 0.16 * keep * (0.5 + 0.5 * sin(ang * 2.0 + t * 0.2));
+      size = 1.1;
+    }
+  } else {
+    // ── stream: mist rising off the R (landing/lobby) · river of light (connected)
+    vec3 c = cLand * uMode.x + cLobby * uMode.y;
+    float s = sLand * uMode.x + sLobby * uMode.y;
+    float rr = fract(aSeed.y + t * 0.03 * (0.5 + aSeed.w));
+    vec3 mist = vec3(c.x + (aMark.x - 0.5) * s * RA * 1.05, c.y + 0.35 * s + rr * rr * 1.5 * s, c.z + (aSeed.z - 0.5) * 0.2);
+    mist.x += snoise(vec3(aSeed.xz * 6.0, t * 0.08)) * 0.05 * s;
+    float aMist = (1.0 - rr) * 0.5;
+    vec3 colMist = dawn(0.08 + aSeed.z * 0.3);
+
+    float flowS = fract(aSeed.x + t * (0.04 + uEnergy * 0.5));
+    vec3 ctrl = vec3(0.0, max(cA.y, 0.0) + mix(2.0, 1.4, uWide) + uEnergy * 0.3, -6.4);
+    vec3 river = bez(cA + vec3(0.0, 0.1, 0.0), ctrl, cB + vec3(0.0, 0.1, 0.0), flowS);
+    float env = sin(flowS * 3.14159);
+    float tube = (0.03 + 0.06 * (1.0 - uEnergy)) * env;
+    river += vec3(0.0, cos(aSeed.y * 6.2832), sin(aSeed.y * 6.2832)) * tube * (0.4 + aSeed.w);
+    float aRiver = 0.35 + uEnergy * 0.5;
+
+    float mc = uMode.x + uMode.y;
+    p = mist * mc + river * uMode.z;
+    col = colMist * mc + dawn(flowS) * uMode.z;
+    a = aMist * mc + aRiver * uMode.z;
+    size = 1.1 + aSeed.w * 1.2 + uEnergy * uMode.z;
+    streak = mc;
   }
 
-  // ── Camera: gentle breathing drift, pointer parallax, and a tilt as the page scrolls
-  vec3 cam = vec3(uPointer.x * 0.35 + sin(t * 0.05) * 0.15,
-                  0.42 + uPointer.y * 0.18 - uScroll * 0.55,
-                  1.2);
+  // ── camera: gentle drift, pointer parallax, tilt with scroll
+  vec3 cam = vec3(uPointer.x * 0.25 + sin(t * 0.05) * 0.1, 0.5 + uPointer.y * 0.12 - uScroll * 0.35, 1.2);
   vec3 v = p - cam;
-  float pitch = -0.06 - uScroll * 0.10;
+  float pitch = -0.04 - uScroll * 0.06;
   v = vec3(v.x, v.y * cos(pitch) - v.z * sin(pitch), v.y * sin(pitch) + v.z * cos(pitch));
-  if (v.z > -0.15) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; vAlpha = 0.0; vColor = vec3(0.0); return; }
-
+  if (v.z > -0.15) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; vColor = vec4(0.0); vStreak = 0.0; return; }
   float f = 1.6;
   gl_Position = vec4(v.x * f / uAspect, v.y * f, 0.0, -v.z);
   float dist = -v.z;
-  gl_PointSize = clamp(size * uPixel * 2.2 / dist, 1.0, 48.0);
-  float fog = exp(-dist * 0.075);
-  vColor = col;
-  vAlpha = alpha * (0.35 + 0.65 * fog);
+  gl_PointSize = clamp(size * uPixel * 2.2 / dist, 1.0, 40.0);
+  a *= mix(1.0, 0.2, smoothstep(5.0, 17.0, dist));   // atmospheric fade
+  vColor = vec4(col, clamp(a, 0.0, 1.0));
+  vStreak = streak;
 }`;
 
 const POINT_FS = /* glsl */ `#version 300 es
 precision highp float;
-in vec3 vColor;
-in float vAlpha;
+in vec4 vColor;
+in float vStreak;
 out vec4 o;
-void main(){
+void main() {
   vec2 d = gl_PointCoord * 2.0 - 1.0;
+  d.x *= mix(1.0, 3.2, vStreak);          // streak particles are thin vertical lines
   float r2 = dot(d, d);
   if (r2 > 1.0) discard;
-  float core = exp(-r2 * 5.0);
-  float halo = exp(-r2 * 1.6) * 0.25;
-  o = vec4(vColor * (core + halo) * vAlpha * 2.6, 1.0);
+  float a = vColor.a * smoothstep(1.0, 0.3, r2);
+  o = vec4(vColor.rgb * a, a);            // pre-multiplied
 }`;
 
 const QUAD_VS = /* glsl */ `#version 300 es
@@ -177,47 +204,45 @@ const BLUR_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 vUv; uniform sampler2D uTex; uniform vec2 uDir; out vec4 o;
 void main(){
-  vec3 c = texture(uTex, vUv).rgb * 0.2270270270;
-  c += texture(uTex, vUv + uDir * 1.3846153846).rgb * 0.3162162162;
-  c += texture(uTex, vUv - uDir * 1.3846153846).rgb * 0.3162162162;
-  c += texture(uTex, vUv + uDir * 3.2307692308).rgb * 0.0702702703;
-  c += texture(uTex, vUv - uDir * 3.2307692308).rgb * 0.0702702703;
-  o = vec4(c, 1.0);
+  vec4 c = texture(uTex, vUv) * 0.2270270270;
+  c += texture(uTex, vUv + uDir * 1.3846153846) * 0.3162162162;
+  c += texture(uTex, vUv - uDir * 1.3846153846) * 0.3162162162;
+  c += texture(uTex, vUv + uDir * 3.2307692308) * 0.0702702703;
+  c += texture(uTex, vUv - uDir * 3.2307692308) * 0.0702702703;
+  o = c;
 }`;
 
 const COMPOSITE_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 vUv;
-uniform sampler2D uScene, uBloom;
+uniform sampler2D uScene, uGlow;
 uniform float uTime, uAspect, uEnergy, uPulse, uScroll;
 uniform vec3 uMode;
 out vec4 o;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
-  vec3 scene = texture(uScene, vUv).rgb;
-  vec3 bloom = texture(uBloom, vUv).rgb;
-  vec3 col = scene * 0.9 + bloom * (1.35 + uPulse * 2.0 + uEnergy * 0.6 * uMode.z);
-
-  // night sky gradient
-  vec3 sky = mix(vec3(0.010, 0.012, 0.030), vec3(0.030, 0.034, 0.085), smoothstep(0.0, 1.0, vUv.y));
-  // atmospheric haze band sitting on the horizon
-  float horizon = 0.47 + uScroll * 0.12;
-  float haze = exp(-pow((vUv.y - horizon) * 5.0, 2.0));
-  vec3 hazeCol = mix(vec3(0.10, 0.12, 0.26), vec3(0.20, 0.16, 0.24), vUv.x);
-  // a soft volumetric light shaft from above
-  vec2 sp = (vUv - vec2(0.62, 1.1)) * vec2(uAspect, 1.0);
-  float shaft = pow(max(0.0, 1.0 - abs(atan(sp.x, -sp.y)) * 2.2), 3.0) * smoothstep(1.4, 0.2, length(sp));
-  col += sky + hazeCol * haze * (0.55 + 0.25 * sin(uTime * 0.1)) + vec3(0.09, 0.10, 0.16) * shaft * 0.5;
-
-  // filmic tone map, keeps highlights soft
-  col = vec3(1.0) - exp(-col * 1.35);
-  col = pow(col, vec3(0.95));
-
-  // vignette
+  // warm paper, cooler at the top, with indigo and coral haze
+  vec3 top = vec3(0.925, 0.933, 0.965);
+  vec3 bot = vec3(0.965, 0.941, 0.910);
+  vec3 col = mix(bot, top, smoothstep(0.0, 1.0, vUv.y));
   vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
-  col *= smoothstep(1.35, 0.25, length(q));
-  // film grain
-  col += (hash(vUv * 1000.0 + fract(uTime) * 100.0) - 0.5) * 0.018;
+  vec2 h1 = q - vec2(-0.6, 0.38), h2 = q - vec2(0.62, -0.22);
+  col = mix(col, vec3(0.80, 0.82, 0.98), 0.38 * exp(-dot(h1, h1) * 2.0));
+  col = mix(col, vec3(1.00, 0.84, 0.76), 0.42 * exp(-dot(h2, h2) * 1.8));
+
+  // soft coloured glow from the blurred dots (the haze under the temple)
+  vec4 g = texture(uGlow, vUv);
+  vec3 gc = g.a > 0.0005 ? g.rgb / g.a : vec3(0.0);
+  float ga = clamp(g.a * (1.1 + uPulse * 2.5 + uEnergy * uMode.z * 1.2), 0.0, 0.55);
+  col = mix(col, mix(col, gc, 0.55), ga);
+
+  vec4 s = texture(uScene, vUv);
+  col = col * (1.0 - s.a) + s.rgb;
+
+  // morning mist over the horizon
+  float hz = exp(-pow((vUv.y - 0.33) * 5.5, 2.0));
+  col = mix(col, vec3(0.972, 0.965, 0.952), hz * 0.32);
+  col += (hash(vUv * 1000.0 + fract(uTime) * 100.0) - 0.5) * 0.012;
   o = vec4(col, 1.0);
 }`;
 
@@ -234,6 +259,7 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string) {
   gl.attachShader(p, make(gl.FRAGMENT_SHADER, fs));
   gl.bindAttribLocation(p, 0, 'aSeed');
   gl.bindAttribLocation(p, 1, 'aKind');
+  gl.bindAttribLocation(p, 2, 'aMark');
   gl.bindAttribLocation(p, 0, 'aPos');
   gl.linkProgram(p);
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p) || 'link');
@@ -248,6 +274,21 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string) {
 
 interface Target { fb: WebGLFramebuffer; tex: WebGLTexture; w: number; h: number }
 
+/** Random point on one of the R's scan-line bars, weighted by bar area. */
+function markSampler() {
+  const areas = MARK_BARS.map(([, , w, h]) => w * h);
+  const total = areas.reduce((a, b) => a + b, 0);
+  const cdf: number[] = [];
+  areas.reduce((acc, a, i) => (cdf[i] = acc + a / total), 0);
+  return (): [number, number] => {
+    const r = Math.random();
+    let i = cdf.findIndex((c) => r <= c);
+    if (i < 0) i = MARK_BARS.length - 1;
+    const [x, y, w, h] = MARK_BARS[i];
+    return [x + Math.random() * w, y + Math.random() * h];
+  };
+}
+
 export default function Atmosphere() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -258,7 +299,6 @@ export default function Atmosphere() {
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const mobile = window.matchMedia('(max-width: 768px)').matches || (navigator.hardwareConcurrency || 4) <= 4;
-    const hdr = !!gl.getExtension('EXT_color_buffer_float') || !!gl.getExtension('EXT_color_buffer_half_float');
 
     let points, blur, comp;
     try {
@@ -271,24 +311,29 @@ export default function Atmosphere() {
       return;
     }
 
-    // ── Particles: seeds only; everything else is computed on the GPU
-    const counts = mobile ? [16000, 2500, 5000] : [42000, 5000, 11000];
-    const total = counts[0] + counts[1] + counts[2];
+    // meadow, mark A, sky, mark B, stream
+    const counts = mobile ? [11000, 6000, 2200, 6000, 3500] : [24000, 11000, 5000, 11000, 7000];
+    const total = counts.reduce((a, b) => a + b, 0);
     const seeds = new Float32Array(total * 4);
     const kinds = new Float32Array(total);
-    for (let i = 0, k = 0; k < 3; k++) {
+    const marks = new Float32Array(total * 2);
+    const sample = markSampler();
+    for (let i = 0, k = 0; k < counts.length; k++) {
       for (let j = 0; j < counts[k]; j++, i++) {
         seeds[i * 4] = Math.random(); seeds[i * 4 + 1] = Math.random();
         seeds[i * 4 + 2] = Math.random(); seeds[i * 4 + 3] = Math.random();
         kinds[i] = k;
+        const [mx, my] = k === 4 ? [Math.random(), 0] : sample();
+        marks[i * 2] = mx; marks[i * 2 + 1] = my;
       }
     }
     const pointVao = gl.createVertexArray()!;
     gl.bindVertexArray(pointVao);
-    const sb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, sb); gl.bufferData(gl.ARRAY_BUFFER, seeds, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
-    const kb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, kb); gl.bufferData(gl.ARRAY_BUFFER, kinds, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
+    const buf = (data: Float32Array, loc: number, size: number) => {
+      const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+    };
+    buf(seeds, 0, 4); buf(kinds, 1, 1); buf(marks, 2, 2);
 
     const quadVao = gl.createVertexArray()!;
     gl.bindVertexArray(quadVao);
@@ -300,8 +345,7 @@ export default function Atmosphere() {
     const makeTarget = (w: number, h: number): Target => {
       const tex = gl.createTexture()!;
       gl.bindTexture(gl.TEXTURE_2D, tex);
-      if (hdr) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
-      else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -309,32 +353,30 @@ export default function Atmosphere() {
       const fb = gl.createFramebuffer()!;
       gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-      gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
       return { fb, tex, w, h };
     };
     const freeTarget = (t?: Target) => { if (t) { gl.deleteFramebuffer(t.fb); gl.deleteTexture(t.tex); } };
 
-    let W = 0, H = 0, scale = 1;
-    let scene: Target[] = [];
-    let bloomA: Target | undefined, bloomB: Target | undefined;
-
+    let W = 0, H = 0;
+    let scene: Target | undefined, bloomA: Target | undefined, bloomB: Target | undefined;
+    let dirty = true;
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5);
-      scale = dpr * (mobile ? 0.7 : 0.8);
+      const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.75);
+      const scale = dpr * (mobile ? 0.8 : 0.9);
       const w = Math.max(2, Math.floor(window.innerWidth * scale));
       const h = Math.max(2, Math.floor(window.innerHeight * scale));
+      dirty = true;
       if (w === W && h === H) return;
       W = w; H = h;
       canvas.width = W; canvas.height = H;
-      scene.forEach(freeTarget); freeTarget(bloomA); freeTarget(bloomB);
-      scene = [makeTarget(W, H)];
-      const bw = Math.max(2, W >> 2), bh = Math.max(2, H >> 2);
-      bloomA = makeTarget(bw, bh); bloomB = makeTarget(bw, bh);
+      freeTarget(scene); freeTarget(bloomA); freeTarget(bloomB);
+      scene = makeTarget(W, H);
+      bloomA = makeTarget(Math.max(2, W >> 2), Math.max(2, H >> 2));
+      bloomB = makeTarget(Math.max(2, W >> 2), Math.max(2, H >> 2));
     };
     resize();
     window.addEventListener('resize', resize);
 
-    // ── Inputs
     const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
     const onMove = (e: PointerEvent) => {
       pointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -343,64 +385,63 @@ export default function Atmosphere() {
     window.addEventListener('pointermove', onMove, { passive: true });
 
     const mode = { x: 1, y: 0, z: 0 };
-    let energy = 0, pulse = 0, scroll = 0;
-    let raf = 0, last = performance.now(), time = Math.random() * 100;
+    let energy = 0, pulse = 0, scroll = 0, wide = 1, quiet = atmosphere.quiet ? 1 : 0;
+    let raf = 0, last = performance.now(), time = 20 + Math.random() * 40, lastSig = '';
 
-    let drewStill = false;
-    const onResizeRedraw = () => { drewStill = false; };
-    window.addEventListener('resize', onResizeRedraw);
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      // Animation switched off: draw a single still frame and idle (no GPU work).
-      if (atmosphere.still) {
-        if (drewStill) { last = now; return; }
-        drewStill = true;
-      } else drewStill = false;
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const sig = atmosphere.mode + (atmosphere.quiet ? 'q' : '');
+      if (sig !== lastSig) { lastSig = sig; dirty = true; }
+      if (atmosphere.still && !dirty) { last = now; return; }
+      dirty = false;
+      const dt = atmosphere.still ? 0.05 : Math.min(0.05, (now - last) / 1000);
       last = now;
-      time += dt * (reduceMotion ? 0.15 : 1);
+      time += dt * (reduceMotion ? 0.12 : 1);
 
-      // ease everything so state changes morph instead of snapping
-      const k = 1 - Math.exp(-dt * 1.6);
+      const k = atmosphere.still ? 1 : 1 - Math.exp(-dt * 1.5);
       const target = atmosphere.mode;
       mode.x += ((target === 'landing' ? 1 : 0) - mode.x) * k;
       mode.y += ((target === 'lobby' ? 1 : 0) - mode.y) * k;
       mode.z += ((target === 'connected' ? 1 : 0) - mode.z) * k;
+      if (atmosphere.still && Math.abs(mode.x - (target === 'landing' ? 1 : 0)) > 0.01) dirty = true;
+      const qT = atmosphere.quiet ? 1 : 0;
+      if (atmosphere.still && Math.abs(quiet - qT) > 0.01) dirty = true;
+      quiet += (qT - quiet) * k;
       energy += (atmosphere.energy - energy) * (1 - Math.exp(-dt * 2.5));
       if (atmosphere.pulse > pulse) pulse = atmosphere.pulse;
       atmosphere.pulse = 0;
       pulse *= Math.exp(-dt * 2.2);
       pointer.x += (pointer.tx - pointer.x) * (1 - Math.exp(-dt * 2));
       pointer.y += (pointer.ty - pointer.y) * (1 - Math.exp(-dt * 2));
-      const sTarget = Math.min(1, window.scrollY / Math.max(1, window.innerHeight * 1.5));
+      const sTarget = Math.min(1, window.scrollY / Math.max(1, window.innerHeight * 1.2));
       scroll += (sTarget - scroll) * (1 - Math.exp(-dt * 4));
-
       const aspect = W / H;
-      const next = scene[0];
+      const wTarget = Math.min(1, Math.max(0, (aspect - 0.9) / 0.6));
+      wide += (wTarget - wide) * (1 - Math.exp(-dt * 3));
 
-      // 1) fresh frame every time (no feedback trails)
-      gl.bindFramebuffer(gl.FRAMEBUFFER, next.fb);
+      // 1) dots → scene buffer (pre-multiplied alpha)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, scene!.fb);
       gl.viewport(0, 0, W, H);
-      gl.clearColor(0, 0, 0, 1);
+      gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
-
-      // 2) particles, additive
-      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.useProgram(points.p);
       gl.uniform1f(points.u.uTime, time);
       gl.uniform1f(points.u.uAspect, aspect);
       gl.uniform1f(points.u.uPixel, H / 900 * 3.0);
       gl.uniform1f(points.u.uEnergy, energy);
       gl.uniform1f(points.u.uScroll, scroll);
-      gl.uniform1f(points.u.uPeers, atmosphere.peers);
+      gl.uniform1f(points.u.uWide, wide);
+      gl.uniform1f(points.u.uQuiet, quiet);
       gl.uniform2f(points.u.uPointer, pointer.x, pointer.y);
       gl.uniform3f(points.u.uMode, mode.x, mode.y, mode.z);
       gl.bindVertexArray(pointVao); gl.drawArrays(gl.POINTS, 0, total);
       gl.disable(gl.BLEND);
 
-      // 3) bloom: downsample + separable blur (twice for a wide, soft glow)
+      // 2) soft glow: downsample + separable blur, twice
       gl.useProgram(blur.p);
       gl.bindVertexArray(quadVao);
+      gl.activeTexture(gl.TEXTURE0);
       gl.uniform1i(blur.u.uTex, 0);
       const pass = (src: WebGLTexture, dst: Target, dx: number, dy: number) => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb);
@@ -409,19 +450,19 @@ export default function Atmosphere() {
         gl.uniform2f(blur.u.uDir, dx / dst.w, dy / dst.h);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       };
-      pass(next.tex, bloomA!, 1, 0);
+      pass(scene!.tex, bloomA!, 1, 0);
       pass(bloomA!.tex, bloomB!, 0, 1);
-      pass(bloomB!.tex, bloomA!, 2, 0);
-      pass(bloomA!.tex, bloomB!, 0, 2);
+      pass(bloomB!.tex, bloomA!, 2.5, 0);
+      pass(bloomA!.tex, bloomB!, 0, 2.5);
 
-      // 4) composite to screen
+      // 3) composite over paper
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, W, H);
       gl.useProgram(comp.p);
-      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, next.tex);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, scene!.tex);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bloomB!.tex);
       gl.uniform1i(comp.u.uScene, 0);
-      gl.uniform1i(comp.u.uBloom, 1);
+      gl.uniform1i(comp.u.uGlow, 1);
       gl.uniform1f(comp.u.uTime, time);
       gl.uniform1f(comp.u.uAspect, aspect);
       gl.uniform1f(comp.u.uEnergy, energy);
@@ -435,14 +476,16 @@ export default function Atmosphere() {
 
     const onLost = (e: Event) => { e.preventDefault(); cancelAnimationFrame(raf); canvas.style.display = 'none'; };
     canvas.addEventListener('webglcontextlost', onLost);
+    const onScroll = () => { if (atmosphere.still) dirty = true; };
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('resize', onResizeRedraw);
       window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('scroll', onScroll);
       canvas.removeEventListener('webglcontextlost', onLost);
-      scene.forEach(freeTarget); freeTarget(bloomA); freeTarget(bloomB);
+      freeTarget(scene); freeTarget(bloomA); freeTarget(bloomB);
     };
   }, []);
 
@@ -451,7 +494,7 @@ export default function Atmosphere() {
       ref={ref}
       aria-hidden="true"
       className="fixed inset-0 w-full h-full z-0 pointer-events-none"
-      style={{ background: 'radial-gradient(ellipse at 50% 45%, #0d1230 0%, #03040a 70%)' }}
+      style={{ background: 'linear-gradient(180deg, #ECEEF6 0%, #F6F0E8 100%)' }}
     />
   );
 }

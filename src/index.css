@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
 
 @font-face {
   font-family: 'Geist Sans';
@@ -44,71 +46,87 @@
 @theme {
   --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
   --font-pixel-square: "Geist Pixel Square", monospace;
   --font-pixel-grid: "Geist Pixel Grid", monospace;
   --font-pixel-circle: "Geist Pixel Circle", monospace;
   --font-pixel-triangle: "Geist Pixel Triangle", monospace;
   --font-pixel-line: "Geist Pixel Line", monospace;
-  
-  --color-surface: #0A0E1C;
-  --color-surface-hover: #141a30;
-  --color-surface-border: rgba(214, 228, 255, 0.10);
 
-  --color-brand-neon: #D9F5EC;
-  --color-brand-neon-dim: rgba(217, 245, 236, 0.1);
-  --color-brand-accent: #FFFFFF;
-  --color-brand-peach: #FFC9A8;
-  --color-brand-lilac: #C3B6FF;
+  /* Daylight palette — brand navy comes from the original Relay favicon */
+  --color-paper: #F4F2ED;        /* warm fog */
+  --color-paper-2: #ECEAE4;
+  --color-card: #FFFFFF;
+  --color-ink: #16213A;          /* headings, 15:1 on paper */
+  --color-ink-2: #3E4A60;        /* body, 8:1 */
+  --color-ink-3: #5A6478;        /* secondary, 5.4:1 */
+  --color-line: rgb(22 33 58 / 0.11);
+  --color-brand: #324A64;        /* original Relay navy */
+  --color-brand-strong: #243850;
+  --color-indigo: #4B52E0;
+  --color-ember: #C2410C;        /* text-safe coral (5:1) */
+  --color-coral: #FF7A45;        /* decorative only */
+  --color-ok: #15803D;
+  --color-warn: #A15C07;
+  --color-danger: #B42318;
+
+  /* kept for older classes */
+  --color-surface: #F4F2ED;
+  --color-surface-border: rgb(22 33 58 / 0.11);
+  --color-brand-neon: #324A64;
 }
 
-@keyframes aurora {
-  0% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(2%, -2%) scale(1.05); }
-  66% { transform: translate(-2%, 2%) scale(0.95); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-
-.animate-aurora {
-  animation: aurora 25s ease-in-out infinite alternate;
-}
-
-/* luminous text: soft bloom halo around headline type */
-.text-luminous {
-  background: linear-gradient(100deg, #fff8ee 0%, #d9f5ec 35%, #c3b6ff 70%, #ffc9a8 100%);
+/* Signature gradient: indigo → coral, as in the particle scene */
+.text-dawn {
+  background: linear-gradient(100deg, #3F46D6 0%, #7A4FD0 45%, #E8572A 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 18px rgba(195, 182, 255, 0.35)) drop-shadow(0 0 2px rgba(255, 248, 238, 0.4));
 }
-.glow-soft { box-shadow: 0 0 0 1px rgba(214, 228, 255, 0.06), 0 20px 60px -20px rgba(120, 110, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
-@keyframes breathe { 0%,100% { opacity: .55 } 50% { opacity: 1 } }
-.animate-breathe { animation: breathe 3.2s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .animate-breathe { animation: none; } }
+.bg-dawn { background: linear-gradient(100deg, #4B52E0 0%, #8B5CF6 50%, #FF7A45 100%); }
+.card {
+  background: rgb(255 255 255 / 0.78);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 24px 60px -32px rgb(36 56 80 / 0.35);
+}
+.card-solid { background: #fff; border: 1px solid var(--color-line); box-shadow: 0 18px 50px -34px rgb(36 56 80 / 0.4); }
+.hairline { border-color: var(--color-line); }
+/* dotted rules echo the particle scene */
+.dots-x { background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px); background-size: 9px 9px; background-repeat: repeat-x; background-position: left center; }
+.dots-y { background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px); background-size: 9px 9px; background-repeat: repeat-y; background-position: center top; }
+.flow-dots { animation: flow 1.6s linear infinite; }
+@keyframes flow { to { background-position: 9px center; } }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--color-ink-3); }
+.btn-ink { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:9999px; background: var(--color-ink); color:#fff; font-weight:500; transition: background-color .2s, transform .1s; }
+.btn-ink:hover { background: var(--color-brand); }
+.btn-ink:active { transform: scale(.98); }
+.btn-ink:disabled { opacity:.45; }
+.btn-line { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:9999px; background:#fff; color: var(--color-ink); font-weight:500; border:1px solid rgb(22 33 58 / .16); transition: border-color .2s, background-color .2s; }
+.btn-line:hover { border-color: rgb(22 33 58 / .4); }
+.btn-line:disabled { opacity:.45; }
+.field { background:#fff; border:1px solid rgb(22 33 58 / .18); color: var(--color-ink); outline:none; transition: border-color .2s, box-shadow .2s; }
+.field::placeholder { color: var(--color-ink-3); }
+.field:focus { border-color: var(--color-indigo); box-shadow: 0 0 0 4px rgb(75 82 224 / .14); }
+
+@keyframes breathe { 0%,100% { opacity: .45 } 50% { opacity: 1 } }
+.animate-breathe { animation: breathe 2.8s ease-in-out infinite; }
 
 body {
-  @apply bg-surface text-white font-sans antialiased overflow-x-hidden selection:bg-brand-neon/30 selection:text-white;
+  @apply bg-paper text-ink font-sans antialiased overflow-x-hidden selection:bg-indigo/20;
 }
 
-.font-display {
-  font-family: var(--font-display);
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
 /* markdown tables scroll on narrow screens */
 .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
 .table-wrap table { margin: 0; min-width: 32rem; }
 
 /* Keyboard focus: always visible, never on mouse click */
-:focus-visible { outline: 2px solid #D9F5EC; outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 2px solid #4B52E0; outline-offset: 3px; border-radius: 8px; }
 button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 summary::-webkit-details-marker { display: none; }
 @media (prefers-reduced-motion: reduce) {
+  .flow-dots { animation: none; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
