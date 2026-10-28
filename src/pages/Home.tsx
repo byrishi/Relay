@@ -6,6 +6,7 @@ import Connected from '../components/relay/Connected';
 import Dialog from '../components/Dialog';
 import { collectDropped } from '../components/relay/format';
 import { takeSharedFiles } from '../lib/share';
+import { onSendRequest } from '../lib/send';
 import { Staged, stagedCount } from './home/shared';
 import Landing from './home/Landing';
 import Lobby from './home/Lobby';
@@ -27,6 +28,10 @@ export default function Home() {
   };
   const stageRef = useRef(stage);
   stageRef.current = stage;
+
+  // The header's Send key opens this picker, whatever screen you're on.
+  const picker = useRef<HTMLInputElement>(null);
+  useEffect(() => onSendRequest(() => picker.current?.click()), []);
 
   // Files shared to the installed app (PWA share target) are staged like any others.
   useEffect(() => { takeSharedFiles().then((f) => { if (f.length) stageRef.current([{ files: f, paths: [] }]); }); }, []);
@@ -80,6 +85,8 @@ export default function Home() {
       onDragOver={(e) => e.preventDefault()}
       onDragEnter={(e) => { e.preventDefault(); if (e.dataTransfer.types.includes('Files')) setDragging(true); }}
       onDragLeave={(e) => { e.preventDefault(); if (!e.relatedTarget) setDragging(false); }}>
+      <input ref={picker} type="file" multiple className="sr-only" tabIndex={-1} aria-hidden="true" data-testid="header-send-input"
+        onChange={(e) => { if (e.target.files?.length) stageRef.current([{ files: Array.from(e.target.files), paths: [] }]); e.target.value = ''; }} />
       <AnimatePresence mode="wait">
         {relay.appState === 'LANDING' && <Landing key="landing" relay={relay} onStage={stage} />}
         {relay.appState === 'LOBBY' && <Lobby relay={relay} staged={staged} onStage={stage} onClearStaged={() => setStaged([])} />}

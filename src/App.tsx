@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { requestSend } from './lib/send';
 import { MotionConfig, AnimatePresence, motion, useScroll, useTransform } from 'motion/react';
 
 import Home from './pages/Home';
@@ -26,6 +27,25 @@ const NAV = [
   { to: '/verify-identity', label: 'Verify' },
 ];
 
+/**
+ * "Send a file" opens the file picker straight away. On other pages it
+ * brings you home first; the picker still opens because the click counts
+ * as the user's gesture for a few seconds.
+ */
+function SendButton() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const send = () => {
+    if (pathname !== '/') { navigate('/'); requestAnimationFrame(() => requestAnimationFrame(requestSend)); }
+    else requestSend();
+  };
+  return (
+    <button onClick={send} className="btn btn-signal h-10 px-4 sm:px-5 text-[15px]">
+      <span>Send<span className="hidden sm:inline"> a file</span></span>
+    </button>
+  );
+}
+
 function Header() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -46,7 +66,7 @@ function Header() {
           <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex h-10 px-3.5 items-center rounded-full text-[15.5px] text-ink-2 hover:text-ink hover:bg-bg-2">
             GitHub<span className="sr-only"> (opens in a new tab)</span>
           </a>
-          <Link to="/" className="btn btn-signal h-10 px-4 sm:px-5 text-[15px]"><span>Send<span className="hidden sm:inline"> a file</span></span></Link>
+          <SendButton />
           <button onClick={() => setOpen(!open)} className="lg:hidden w-11 h-11 -mr-2 flex items-center justify-center" aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? 'Close menu' : 'Open menu'}>
             <span className="relative w-5 h-3" aria-hidden="true">
               <span className={`absolute left-0 right-0 h-[2px] bg-ink transition-transform ${open ? 'top-[5px] rotate-45' : 'top-0'}`} />
