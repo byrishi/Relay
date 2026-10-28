@@ -6,7 +6,7 @@ category: Relay
 updated: 2026-10-28
 related: how-p2p-file-transfer-works, webrtc-file-transfer, verify-safety-number, turn-vs-stun
 ---
-Relay moves a file from your device to someone else's without storing it anywhere in between. Here is what happens when you press **Start Transfer**.
+Relay moves a file from your device to someone else's without storing it anywhere in between. Here is what happens when you press **Start sending**.
 
 ## 1. The devices find each other
 

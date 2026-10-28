@@ -45,7 +45,7 @@ Modern browser-based P2P is safe when three things are true:
 ## How to share a file peer-to-peer with Relay
 
 1. Open [Relay](/) on both devices.
-2. Press **Start Transfer** and share the code or QR (or tap the device under **Nearby**).
+2. Press **Start sending** and share the code or QR (or tap the device under **Nearby**).
 3. Approve the device, drop your files, and the receiver presses **Accept**.
 
 It works in Chrome, Edge, Firefox and Safari on any operating system, including between iPhone and Android.

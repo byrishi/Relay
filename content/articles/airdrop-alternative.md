@@ -27,7 +27,7 @@ related: send-files-from-iphone-to-android, send-files-from-phone-to-pc, share-f
 2. Each device appears under **Nearby** on the other. Tap it.
 3. Accept the invitation on the other device, then send. It works with photos, videos, documents and whole folders.
 
-Not on the same network? Press **Start Transfer** and share the code or QR instead.
+Not on the same network? Press **Start sending** and share the code or QR instead.
 
 Install Relay from the browser menu to open it like an app. On Android you can then pick **Share to Relay** from any app's share menu.
 

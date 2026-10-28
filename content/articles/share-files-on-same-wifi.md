@@ -28,7 +28,7 @@ Devices that reach the internet from the same public address (your router) are g
 - **Mobile data or a VPN** on one device puts it on a different network.
 - **Office networks** may block device-to-device traffic.
 
-In those cases, press **Start Transfer** and use the code or QR instead.
+In those cases, press **Start sending** and use the code or QR instead.
 
 ## FAQ
 

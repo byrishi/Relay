@@ -9,12 +9,12 @@ export default function Sparkline({ samples, className = '' }: { samples: number
     <svg viewBox={`0 0 ${w} ${h}`} className={className} preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#4B52E0" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#4B52E0" stopOpacity="0" />
+          <stop offset="0%" stopColor="#8B90FF" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#8B90FF" stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={`0,${h} ${pts.join(' ')} ${w},${h}`} fill="url(#spark-fill)" />
-      <polyline points={pts.join(' ')} fill="none" stroke="#4B52E0" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+      <polyline points={pts.join(' ')} fill="none" stroke="#8B90FF" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
