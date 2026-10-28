@@ -6,7 +6,7 @@ export default function WebRTCSecurity() {
   return (
     <SEOArticleLayout
       title="WebRTC Security: An Architectural Deep Dive"
-      metaDescription="Examine the WebRTC security model, including DTLS, SRTP, Perfect Forward Secrecy, and the exact protocols keeping peer-to-peer transfers secure."
+      metaDescription="Examine the WebRTC security model, including DTLS, SCTP data channels, Perfect Forward Secrecy, and the exact protocols keeping peer-to-peer transfers secure."
       h1="WebRTC Security Model"
     >
       <div className="lead text-xl text-white/80 font-medium p-6 bg-white/5 border border-white/10 rounded-xl mb-12">
@@ -29,14 +29,14 @@ export default function WebRTCSecurity() {
         When two endpoints discover each other via ICE (Interactive Connectivity Establishment), they immediately initiate a DTLS handshake over the new UDP port mapping. This handshake serves three primary purposes:
       </p>
       <ol className="list-decimal pl-6 space-y-3 text-white/80 font-sans my-6">
-        <li><strong>Identity Verification:</strong> The peers generate self-signed certificates and append the cryptographic fingerprint of these certificates into their initial Session Description Protocol (SDP) payloads. During the handshake, the peers mathematically verify that the remote certificate matches the SDP fingerprint exchanged securely out-of-band via the signaling server.</li>
+        <li><strong>Identity Verification:</strong> The peers generate self-signed certificates and append the cryptographic fingerprint of these certificates into their initial Session Description Protocol (SDP) payloads. During the handshake, the peers mathematically verify that the remote certificate matches the SDP fingerprint exchanged via the signaling server. Because that exchange passes through the server, Relay shows a safety number derived from both fingerprints so users can confirm, out of band, that no one swapped them.</li>
         <li><strong>Key Generation:</strong> The endpoints securely derive symmetric cryptographic keys using Diffie-Hellman ephemeral (DHE) or elliptic curve (ECDHE) key exchange algorithms.</li>
         <li><strong>Perfect Forward Secrecy:</strong> Because new ephemeral keys are generated exclusively for the lifespan of that specific session, an attacker cannot record encrypted network traffic and attempt to decrypt it years later by compromising a long-term private key.</li>
       </ol>
 
-      <h3 className="text-2xl mt-8 mb-4">SRTP for Media and Data</h3>
+      <h3 className="text-2xl mt-8 mb-4">SCTP over DTLS for Data</h3>
       <p>
-        Once the DTLS handshake is successfully completed, the newly minted symmetric keys are passed into the **Secure Real-time Transport Protocol (SRTP)** profile. All structural file array buffers routed into the `RTCDataChannel` are encrypted with Advanced Encryption Standard (AES) ciphers functioning in Galois/Counter Mode (AES-GCM). 
+        Audio and video use SRTP, but data channels do not: file chunks routed into an `RTCDataChannel` travel over SCTP inside the DTLS tunnel itself, encrypted with the cipher suite the two browsers negotiate (typically AES-GCM). 
       </p>
       <p>
         This ensures both absolute confidentiality (eavesdroppers cannot view the file chunks) and message authentication (data cannot be tampered with or modified mid-flight without breaking the verification checksum).

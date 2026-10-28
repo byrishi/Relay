@@ -35,12 +35,12 @@ export default function Security() {
             <div>
               <h2 className="text-3xl font-display font-bold mb-4 uppercase tracking-tight">End-to-End Encryption</h2>
               <p className="text-white/60 font-mono text-sm leading-relaxed mb-6">
-                Every byte transferred over Relay is encrypted using WebRTC's mandatory DTLS (Datagram Transport Layer Security) and SRTP (Secure Real-time Transport Protocol). The encryption keys are generated locally on your device and exchanged directly with your peer, bypassing our signaling servers entirely.
+                Every byte transferred over Relay is encrypted by WebRTC's mandatory DTLS (Datagram Transport Layer Security); files and messages travel over SCTP inside that encrypted tunnel. The encryption keys are generated locally on your device and exchanged directly with your peer, bypassing our signaling servers entirely.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-surface-border inline-flex">
                  <div>
                     <div className="text-[10px] font-bold text-white/30 tracking-widest uppercase mb-1">Cipher Suite</div>
-                    <div className="font-mono text-brand-neon">AES-256-GCM</div>
+                    <div className="font-mono text-brand-neon">AES-GCM / ChaCha20 (browser-negotiated)</div>
                  </div>
                  <div>
                     <div className="text-[10px] font-bold text-white/30 tracking-widest uppercase mb-1">Key Exchange</div>
@@ -59,9 +59,9 @@ export default function Security() {
                <EyeOff className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-display font-bold mb-4 uppercase tracking-tight">Zero Knowledge Signaling</h2>
+              <h2 className="text-2xl font-display font-bold mb-4 uppercase tracking-tight">What the server sees</h2>
               <p className="text-white/60 font-mono text-sm leading-relaxed">
-                The only thing our servers see are encrypted SDP (Session Description Protocol) offers and ICE candidates. These contain network routing information, not your data. We do not log IP addresses, we do not require accounts, and we have no database.
+                The signaling server relays connection setup (SDP offers and ICE candidates). These are not encrypted from the server: they contain your IP addresses and your devices' certificate fingerprints, plus the room code and the device name you show. File names, file contents and messages never touch it. It keeps state in memory only, has no database and writes no logs of this data, though the hosting provider may log IP addresses. Because the server introduces the devices, a malicious server could try to sit in the middle; the safety number on both screens is how you rule that out. Rooms also require you to approve each new device, can be password-protected, and code guessing is rate-limited.
               </p>
             </div>
           </div>

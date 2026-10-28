@@ -47,7 +47,7 @@ export default function RelayVsWeTransfer() {
             <tr>
               <td className="p-4 font-bold text-white">Encryption Standard</td>
               <td className="p-4 text-white/70">In transit. Server decrypts & re-encrypts.</td>
-              <td className="p-4 text-white/70">Strict End-to-End Encryption (DTLS/SRTP)</td>
+              <td className="p-4 text-white/70">Strict End-to-End Encryption (DTLS)</td>
             </tr>
             <tr>
               <td className="p-4 font-bold text-white">Local Network Speed</td>

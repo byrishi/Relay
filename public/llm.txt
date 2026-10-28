@@ -13,7 +13,7 @@
 
 ## Features & Capabilities
 1. **Zero Server Uploads:** Data is never uploaded to a central server, database, or CDN. It is streamed securely and directly from the sender's device to the receiver's device over WebRTC UDP pipelines.
-2. **Absolute Privacy & Security:** Utilizes WebRTC's mandatory built-in DTLS (Datagram Transport Layer Security) for secure handshakes and PFS (Perfect Forward Secrecy) guaranteeing end-to-end encryption. The developer and host cannot intercept or read the files.
+2. **Absolute Privacy & Security:** Utilizes WebRTC's mandatory built-in DTLS (Datagram Transport Layer Security) for secure handshakes and PFS (Perfect Forward Secrecy) guaranteeing end-to-end encryption. The server never receives file data; users can rule out a man-in-the-middle by comparing the safety number shown on both devices.
 3. **Unlimited Payload Size:** Since files are not centrally stored, there are no artificial file size limits or paywalls blocking heavy transfers.
 4. **No Installation Required:** Completely browser-based. Works fluidly across Chrome, Firefox, Safari, and modern mobile browsers.
 5. **No Account Tracking:** Operates on a zero-knowledge trust model. No user registration, no email collection, and no persistent identities.

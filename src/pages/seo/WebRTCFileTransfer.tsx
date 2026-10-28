@@ -81,10 +81,10 @@ export default function WebRTCFileTransfer() {
         Security is not an optional add-on in the WebRTC specification—it is strictly mandated. Every WebRTC connection requires encryption, setting it apart from older protocols like FTP or standard HTTP.
       </p>
       <p>
-        When a peer-to-peer connection is established, the WebRTC implementation executes a Datagram Transport Layer Security (DTLS) handshake. This generates ephemeral cryptographic keys used to secure the connection using the Secure Real-time Transport Protocol (SRTP).
+        When a peer-to-peer connection is established, the WebRTC implementation executes a Datagram Transport Layer Security (DTLS) handshake. This generates ephemeral cryptographic keys used to secure the DTLS-encrypted connection.
       </p>
       <p>
-        Because the keys are generated dynamically between the two browsers, the signaling server (including the Relay infrastructure) cannot intercept, decrypt, or inspect the file payload. It is mathematically impossible for the signaling server to view your files, ensuring <Link to="/private-file-transfer">private file transfer</Link> out-of-the-box.
+        Because the keys are generated dynamically between the two browsers, the signaling server (including the Relay infrastructure) cannot intercept, decrypt, or inspect the file payload. The one caveat is that the server relays the key fingerprints, so a malicious server could attempt a man-in-the-middle attack; Relay's safety number lets both people confirm that did not happen, ensuring <Link to="/private-file-transfer">private file transfer</Link> out-of-the-box.
       </p>
 
       <h2 className="text-3xl mt-16 mb-6">Challenges: NATs and Firewalls</h2>

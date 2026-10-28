@@ -32,8 +32,8 @@ export default function HowItWorks() {
             },
             {
               icon: <ShieldCheck className="w-8 h-8 text-black" />,
-              title: "Military Grade E2EE",
-              desc: "All files and messages are end-to-end encrypted using AES-256-GCM. We couldn't look at your data even if we tried."
+              title: "End-to-End Encrypted",
+              desc: "WebRTC encrypts every file and message with DTLS, using keys created on your two devices. Compare the safety number on both screens and you know nobody, including our server, is in the middle."
             },
             {
               icon: <WifiOff className="w-8 h-8 text-black" />,

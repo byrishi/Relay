@@ -6,7 +6,7 @@ export default function SecureDeviceTransfer() {
   return (
     <SEOArticleLayout
       title="Secure File Transfer Between Devices: No Accounts, No Risks"
-      metaDescription="Need to execute a secure file transfer between devices instantly? Learn how WebRTC provides military-grade encryption without requiring central accounts or uploads."
+      metaDescription="Need to execute a secure file transfer between devices instantly? Learn how WebRTC provides strong end-to-end encryption without requiring central accounts or uploads."
       h1="Secure File Transfer Between Devices"
     >
       <div className="lead text-xl text-white/80 font-medium p-6 bg-white/5 border border-white/10 rounded-xl mb-12">
