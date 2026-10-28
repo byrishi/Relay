@@ -1,35 +1,28 @@
-import { useId } from 'react';
-import { MARK_ASPECT, MARK_BARS } from './mark';
-
-/** Brand gradient, top to bottom: indigo, violet, coral (the colours of the particle R). */
-export const MARK_STOPS: [number, string][] = [[0, '#8B90FF'], [0.55, '#B08CFF'], [1, '#FF8A5C']];
-/** Deeper version of the same gradient, for light backgrounds. */
-export const MARK_STOPS_DEEP: [number, string][] = [[0, '#3F46D6'], [0.55, '#7444D4'], [1, '#D9481C']];
-
 /**
- * The original Relay "R": 34 horizontal scan-lines.
- * `gradient` paints it in the brand gradient (colours follow the active design);
- * `deep` forces the darker stops, for light surfaces such as the QR card.
+ * The Relay mark: an R drawn on a 5×7 pixel grid, plus one pale pixel
+ * leaving its shoulder — the file on its way. It stays crisp down to
+ * 16 px because every cell lands on whole pixels.
  */
-export function RelayMark({ className = '', title, gradient = true, deep = false }: { className?: string; title?: string; gradient?: boolean; deep?: boolean }) {
-  const id = useId().replace(/:/g, '');
-  const h = 100, w = h * MARK_ASPECT;
+export const R_CELLS: [number, number][] = [
+  [0, 0], [1, 0], [2, 0], [3, 0],
+  [0, 1], [4, 1],
+  [0, 2], [4, 2],
+  [0, 3], [1, 3], [2, 3], [3, 3],
+  [0, 4], [2, 4],
+  [0, 5], [3, 5],
+  [0, 6], [4, 6],
+];
+/** The packet pixel. */
+export const R_PACKET: [number, number] = [5, 0];
+
+export function RelayMark({ className = '', title, ink = 'var(--color-signal)', signal = '#8FA0FF', gap = 0.14, animate = false }: {
+  className?: string; title?: string; ink?: string; signal?: string; gap?: number; animate?: boolean;
+}) {
+  const s = 1 - gap;
   return (
-    <svg viewBox={`0 0 ${w.toFixed(2)} ${h}`} className={className} role={title ? 'img' : undefined} aria-hidden={title ? undefined : true} aria-label={title}>
-      {gradient && (
-        <defs>
-          <linearGradient id={`rg${id}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={h}>
-            {deep
-              ? MARK_STOPS_DEEP.map(([o, c]) => <stop key={o} offset={o} stopColor={c} />)
-              : MARK_STOPS.map(([o], i) => <stop key={o} offset={o} style={{ stopColor: `var(--mark-${i + 1})` }} />)}
-          </linearGradient>
-        </defs>
-      )}
-      <g fill={gradient ? `url(#rg${id})` : 'currentColor'}>
-        {MARK_BARS.map(([x, y, bw, bh], i) => (
-          <rect key={i} x={(x * w).toFixed(2)} y={(y * h).toFixed(2)} width={(bw * w).toFixed(2)} height={(bh * h).toFixed(2)} rx={(bh * h / 2).toFixed(2)} />
-        ))}
-      </g>
+    <svg viewBox="0 0 6 7" className={className} role={title ? 'img' : undefined} aria-hidden={title ? undefined : true} aria-label={title} shapeRendering="crispEdges">
+      <g fill={ink}>{R_CELLS.map(([x, y]) => <rect key={`${x}${y}`} x={x + gap / 2} y={y + gap / 2} width={s} height={s} />)}</g>
+      <rect x={R_PACKET[0] + gap / 2} y={R_PACKET[1] + gap / 2} width={s} height={s} fill={signal} className={animate ? 'mark-packet' : undefined} />
     </svg>
   );
 }
@@ -37,9 +30,9 @@ export function RelayMark({ className = '', title, gradient = true, deep = false
 /** Mark + wordmark. */
 export function RelayLogo({ className = '' }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <RelayMark className="h-[30px] w-auto" />
-      <span className="text-[18px] font-semibold tracking-[-0.025em] leading-none text-fg">Relay</span>
+    <span className={`group inline-flex items-center gap-2.5 ${className}`}>
+      <RelayMark className="h-[22px] w-auto" animate />
+      <span className="text-[22px] font-bold tracking-[-0.03em] leading-none text-ink">Relay</span>
     </span>
   );
 }

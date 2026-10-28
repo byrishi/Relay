@@ -15,12 +15,14 @@ import rateLimit from 'express-rate-limit';
  */
 
 // ── Readable room codes: adjective-noun-123  (244 × 247 × 900 ≈ 54M combinations)
-const ADJ = 'amber,ancient,arctic,azure,bold,brave,breezy,bright,brisk,calm,candid,cedar,chill,civic,clever,cobalt,coral,cosmic,cozy,crimson,crisp,curly,dapper,dawn,deep,dewy,dusky,eager,early,easy,ember,epic,fair,fancy,fern,fiery,fleet,fluffy,foggy,fond,frosty,gentle,giant,glad,gleaming,glossy,golden,grand,grassy,hazel,hidden,hollow,honest,humble,icy,indigo,ivory,jade,jolly,keen,kind,lively,lofty,loyal,lucid,lucky,lunar,magic,mellow,merry,mighty,minty,misty,modest,mossy,neat,nimble,noble,north,oaken,ocean,olive,opal,orchid,pastel,patient,peachy,pearl,plucky,polar,polite,proud,quick,quiet,radiant,rapid,rare,rosy,royal,ruby,rustic,sage,sandy,scarlet,serene,shady,sharp,shiny,silent,silky,silver,simple,sleek,smooth,snowy,solar,sonic,spicy,steady,stormy,sturdy,sunny,swift,tame,tidy,timber,tiny,topaz,tranquil,tropic,true,tulip,velvet,vivid,warm,wavy,wild,windy,wise,witty,woolly,young,zesty,zen,alpine,autumn,blazing,blissful,bouncy,cheery,cloudy,crystal,daring,dreamy,dusty,electric,elegant,emerald,fearless,festive,floral,fresh,frozen,gallant,gilded,glacial,glowing,graceful,happy,hearty,heroic,hushed,jazzy,jovial,kindly,lavish,lemon,limber,lilac,lush,majestic,marble,meadow,midnight,mystic,nautical,nifty,nova,orbit,pacific,paper,peppy,pine,plum,prairie,prime,quartz,quirky,rainy,regal,rhythm,ripple,river,rocky,saffron,satin,shimmer,sierra,sincere,sky,smoky,snug,sparkly,spring,starry,stellar,stone,summer,super,sweet,thunder,tidal,toasty,twilight,urban,vast,vintage,violet,vital,wander,winter,wooden,zippy,zonal,aqua,bliss,briny,burly,cinder,dandy,feisty,glimmer,hazy,indie'.split(',');
-const NOUN = 'badger,bay,beacon,bear,bee,birch,bison,bloom,breeze,brook,canyon,cedar,cloud,comet,coral,cove,crane,creek,crow,dawn,deer,delta,dolphin,dove,dune,eagle,echo,elk,ember,falcon,fern,finch,fjord,flame,fox,frog,galaxy,gecko,glacier,glade,grove,gull,harbor,hare,hawk,heron,hill,horizon,ibis,island,jaguar,koala,lagoon,lake,lark,leaf,lemur,lily,lion,lotus,lynx,maple,marsh,meadow,mesa,meteor,mink,moon,moose,moth,mountain,nebula,newt,oak,oasis,ocean,orca,otter,owl,panda,panther,parrot,peak,pebble,pelican,penguin,pine,planet,plover,pond,poppy,puffin,quail,rabbit,rain,raven,reef,ridge,river,robin,rock,rose,sage,salmon,seal,shore,sky,sparrow,spruce,star,stone,stork,storm,stream,sun,swan,thistle,tide,tiger,trail,tulip,tundra,turtle,valley,violet,wave,whale,willow,wolf,wren,yak,zebra,acorn,anchor,apple,arrow,aspen,aurora,basil,berry,blossom,boulder,bramble,cactus,cairn,caribou,cascade,cherry,cliff,clover,condor,cosmos,cougar,coyote,cricket,crystal,cypress,daisy,dragon,drift,eclipse,ermine,falls,feather,ferret,firefly,flint,forest,fountain,garnet,geyser,ginger,granite,gully,hazel,heath,hedge,hollow,hornet,iris,ivy,jasper,juniper,kestrel,kiwi,lantern,larch,laurel,lichen,magpie,mango,marlin,mist,monsoon,moss,nectar,nettle,nutmeg,ocelot,olive,orchid,osprey,papaya,peach,pepper,petal,pigeon,plateau,prism,puma,quartz,rapids,redwood,ripple,sapphire,seagull,sequoia,shell,shrike,sierra,skylark,snowfall,sorrel,spark,spring,squall,summit,swift,sycamore,thunder,tornado,trout,typhoon,vale,vapor,walrus,warbler,wildcat,zephyr,bobcat,bonsai,breaker,cobble,dingo,egret,fennel,gopher'.split(',');
+// Room codes are made from Sanskrit words found across the Vedas, Upanishads and the Gita:
+// a quality or idea, then something from nature, then a number (e.g. satya-ganga-108).
+const ADJ = 'satya,dharma,shanti,ananda,karuna,maitri,prema,shraddha,viveka,vidya,jnana,bhakti,tapas,shakti,tejas,ojas,prana,chitta,manas,buddhi,smriti,dhriti,kshama,daya,dana,seva,yajna,mantra,sutra,shloka,raga,tala,nada,bindu,mudra,yoga,dhyana,samadhi,moksha,mukti,sattva,rita,rasa,bhava,kirti,lakshya,sankalpa,abhaya,ahimsa,akshara,amrita,ananta,arjava,asha,atma,bodha,darshana,dhairya,divya,gati,guna,jaya,jyoti,kala,kavya,kriya,kshetra,lila,mangala,marga,medha,mitra,niti,nidhi,nitya,prakasha,prakriti,pratibha,punya,purna,sadhana,sahaja,sakha,samvada,shaurya,shiksha,shubha,shuddhi,siddhi,sneha,spanda,sukha,swara,tattva,tushti,udaya,ujjwala,utsaha,vani,veda,vijaya,vinaya,virya,vrata,yashas,anubhava,chetana,dhyeya,karma,japa,kshanti,mati,nirmala,pavitra,saumya,tejasvi,vairagya'.split(',');
+const NOUN = 'agni,vayu,jala,akasha,prithvi,surya,chandra,tara,nakshatra,megha,vidyut,varsha,ganga,yamuna,sindhu,narmada,kaveri,godavari,himalaya,meru,vindhya,kailasa,vana,aranya,kunja,padma,kamala,utpala,ashoka,chandana,tulasi,kadamba,vata,ashvattha,bilva,amra,kesara,mayura,hamsa,kokila,chakora,shuka,garuda,gaja,ashva,simha,harina,matsya,kurma,nadi,sagara,samudra,sarovara,tirtha,giri,shikhara,ushas,sandhya,ratri,ritu,vasanta,grishma,sharad,hemanta,shishira,kshitija,dhruva,rohini,swati,chitra,vishakha,ashvini,kirana,prabha,aruna,indu,soma,mani,ratna,mukta,suvarna,rajata,shankha,veena,venu,mridanga,deepa,dhvaja,ratha,sopana,setu,dvara,nauka,pushpa,phala,parna,mula,bija,ankura,pallava,taru,lata,pavana,sarita,dhara,jharna,parvata,kanana'.split(',');
 
 function generateCode(exists: (c: string) => boolean) {
   for (let i = 0; i < 1000; i++) {
-    const a = ADJ[crypto.randomInt(ADJ.length)].replace(/\d+$/, '');
+    const a = ADJ[crypto.randomInt(ADJ.length)];
     const n = NOUN[crypto.randomInt(NOUN.length)];
     const code = `${a}-${n}-${crypto.randomInt(100, 1000)}`;
     if (!exists(code)) return code;
@@ -101,7 +103,7 @@ async function startServer() {
         'script-src': ["'self'"],
         'style-src': ["'self'", "'unsafe-inline'"],
         'img-src': ["'self'", 'data:', 'blob:'],
-        'media-src': ["'self'", 'blob:'],
+        'media-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
         'font-src': ["'self'", 'data:'],
         'connect-src': ["'self'", 'wss:', 'ws:', ...backendOrigins],
         'worker-src': ["'self'", 'blob:'],
@@ -379,6 +381,7 @@ async function startServer() {
       setHeaders(res, file) {
         if (file.endsWith('sw.js') || file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
         else if (/[\\/]assets[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        else if (/[\\/]audio[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=604800');
         if (file.endsWith('.md')) res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
       },
     }));

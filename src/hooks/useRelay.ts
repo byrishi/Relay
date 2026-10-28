@@ -23,8 +23,9 @@ function getClientId() {
   return id;
 }
 
-const NAME_A = ['Violet', 'Amber', 'Coral', 'Jade', 'Ivory', 'Indigo', 'Silver', 'Golden', 'Misty', 'Lunar', 'Solar', 'Velvet', 'Crimson', 'Azure', 'Sage', 'Opal'];
-const NAME_B = ['Fox', 'Heron', 'Lynx', 'Otter', 'Falcon', 'Panda', 'Koala', 'Wren', 'Orca', 'Moth', 'Raven', 'Tiger', 'Swan', 'Gecko', 'Owl', 'Hare'];
+// Device names pair a Sanskrit quality with a bird, flower or star from the old texts (e.g. Shanti Hamsa).
+const NAME_A = ['Satya', 'Shanti', 'Ananda', 'Karuna', 'Maitri', 'Jyoti', 'Divya', 'Amrita', 'Tejas', 'Prana', 'Vidya', 'Kirti', 'Mangala', 'Ujjwala', 'Sneha', 'Swara'];
+const NAME_B = ['Mayura', 'Hamsa', 'Kokila', 'Padma', 'Kamala', 'Megha', 'Surya', 'Chandra', 'Tara', 'Ganga', 'Sindhu', 'Gaja', 'Simha', 'Harina', 'Shuka', 'Dhruva'];
 
 export function deviceKind(): 'phone' | 'tablet' | 'laptop' | 'desktop' {
   const ua = navigator.userAgent;

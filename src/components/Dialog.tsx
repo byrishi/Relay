@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
+import { setScrollLock } from '../lib/scroll';
 
 /**
  * Accessible modal: role="dialog", labelled, focus moves in and is trapped,
@@ -37,25 +38,26 @@ export default function Dialog({ title, description, onClose, children, dismissi
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
     document.addEventListener('keydown', onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    setScrollLock(true);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = overflow;
+      setScrollLock(false);
       prev?.focus?.();
     };
   }, []);
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center p-3 sm:p-4"
       onMouseDown={(e) => { if (dismissible && e.target === e.currentTarget) onClose(); }}>
       <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={description ? descId : undefined}
         tabIndex={-1} data-testid={testId}
-        className="w-full max-w-md rounded-2xl bg-s2 ring2 shadow-[0_40px_100px_-20px_rgb(0_0_0/0.9)] p-6 md:p-7 text-left text-fg outline-none">
-        <h2 id={titleId} className="text-[19px] font-semibold tracking-[-0.02em]">{title}</h2>
-        {description && <div id={descId} className="text-[14.5px] text-fg-2 mt-2 leading-relaxed">{description}</div>}
-        <div className="mt-5">{children}</div>
+        className="w-full max-w-md rounded-[28px] bg-paper shadow-[0_30px_80px_-20px_rgb(14_18_51/.45)] text-left text-ink outline-none">
+        <div className="p-6 md:p-7">
+        <h2 id={titleId} className="display text-[34px] leading-[.95]" style={{ ['--w' as string]: 4 }}>{title}</h2>
+        {description && <div id={descId} className="text-[15px] text-ink-2 mt-3 leading-relaxed">{description}</div>}
+        <div className="mt-6">{children}</div>
+        </div>
       </div>
     </motion.div>,
     document.body,

@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UploadCloud, ShieldCheck } from 'lucide-react';
+import { UploadCloud } from 'lucide-react';
 import { useRelay } from '../hooks/useRelay';
 import Connected from '../components/relay/Connected';
 import Dialog from '../components/Dialog';
 import { collectDropped } from '../components/relay/format';
 import { takeSharedFiles } from '../lib/share';
-import { useDesign } from '../lib/design';
 import { Staged, stagedCount } from './home/shared';
-import LandingDark from './home/LandingDark';
-import LandingLight from './home/LandingLight';
+import Landing from './home/Landing';
 import Lobby from './home/Lobby';
 
 export default function Home() {
   const relay = useRelay();
-  const design = useDesign();
   const [dragging, setDragging] = useState(false);
   const [staged, setStaged] = useState<Staged>([]);
   const hasApprovedPeer = Object.values(relay.peers).some((p) => p.approved && p.connected);
@@ -77,8 +74,6 @@ export default function Home() {
     stage(await collectDropped(e.dataTransfer.items));
   };
 
-  const Landing = design === 'light' ? LandingLight : LandingDark;
-
   return (
     <div className="flex-1 flex flex-col w-full relative"
       onDrop={onDrop}
@@ -86,7 +81,7 @@ export default function Home() {
       onDragEnter={(e) => { e.preventDefault(); if (e.dataTransfer.types.includes('Files')) setDragging(true); }}
       onDragLeave={(e) => { e.preventDefault(); if (!e.relatedTarget) setDragging(false); }}>
       <AnimatePresence mode="wait">
-        {relay.appState === 'LANDING' && <Landing key={`landing-${design}`} relay={relay} onStage={stage} />}
+        {relay.appState === 'LANDING' && <Landing key="landing" relay={relay} onStage={stage} />}
         {relay.appState === 'LOBBY' && <Lobby relay={relay} staged={staged} onStage={stage} onClearStaged={() => setStaged([])} />}
         {relay.appState === 'CONNECTED' && (
           <motion.div key="connected" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
@@ -100,8 +95,8 @@ export default function Home() {
           <Dialog title={`${relay.nearbyInvite.name} wants to connect`} testId="nearby-invite" onClose={() => relay.answerNearbyInvite(false)}
             description="A device on your Wi-Fi network is inviting you. Only connect if you recognise it. You'll still choose which files to accept.">
             <div className="flex gap-2">
-              <button data-autofocus onClick={() => relay.answerNearbyInvite(true)} className="btn btn-w btn-lg flex-1">Connect</button>
-              <button onClick={() => relay.answerNearbyInvite(false)} className="btn btn-g btn-lg flex-1">Decline</button>
+              <button data-autofocus onClick={() => relay.answerNearbyInvite(true)} className="btn btn-signal h-12 flex-1">Connect</button>
+              <button onClick={() => relay.answerNearbyInvite(false)} className="btn btn-line h-12 flex-1">Decline</button>
             </div>
           </Dialog>
         )}
@@ -111,8 +106,8 @@ export default function Home() {
         <AnimatePresence>
           {relay.notice && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}
-              className="max-w-full px-4 py-2.5 rounded-xl bg-s3 ring2 text-[14px] text-fg shadow-[0_20px_50px_-12px_rgb(0_0_0/0.5)] flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-acc shrink-0" aria-hidden="true" />{relay.notice}
+              className="max-w-full px-5 h-12 rounded-full bg-ink text-white text-[15px] shadow-[0_20px_50px_-12px_rgb(14_18_51/0.5)] flex items-center">
+              {relay.notice}
             </motion.div>
           )}
         </AnimatePresence>
@@ -121,10 +116,10 @@ export default function Home() {
       <AnimatePresence>
         {dragging && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} aria-hidden="true"
-            className="fixed inset-3 z-50 rounded-2xl bg-bg/90 backdrop-blur-md border border-dashed border-acc/60 flex flex-col items-center justify-center pointer-events-none">
-            <UploadCloud className="w-10 h-10 text-acc" />
-            <p className="mt-5 text-[40px] md:text-[56px] font-semibold tracking-[var(--tr-1)]">Drop to send</p>
-            <p className="text-[16px] text-fg-2 mt-2">{relay.appState === 'CONNECTED' ? 'Files and folders go straight to the connected device.' : 'You will get a link and QR code for the other device.'}</p>
+            className="fixed inset-3 z-[260] rounded-[28px] bg-signal text-white flex flex-col justify-between p-6 md:p-10 pointer-events-none">
+            <UploadCloud className="w-8 h-8" />
+            <p className="display text-[26vw] md:text-[18vw] leading-[.8]" style={{ ['--w' as string]: 3.4 }}>Let go.</p>
+            <p className="text-[18px] text-dev-fg-2 max-w-[40ch]">{relay.appState === 'CONNECTED' ? 'Files and folders go straight to the connected device.' : 'You will get a link and QR code for the other device.'}</p>
           </motion.div>
         )}
       </AnimatePresence>
