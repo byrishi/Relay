@@ -1,9 +1,31 @@
+# Relay — https://relay.rishishah.in
+# Everyone is welcome to index the site, including AI search and answer engines.
+# A plain-text guide for language models lives at /llms.txt (full text: /llms-full.txt).
+
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /socket.io/
-Disallow: /admin/
-Disallow: /private/
-Disallow: /tmp/
+Disallow: /share-target
+
+# AI search and assistants (explicitly allowed)
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Bingbot
+User-agent: DuckAssistBot
+User-agent: Meta-ExternalAgent
+User-agent: MistralAI-User
+User-agent: CCBot
+Allow: /
+Disallow: /api/
+Disallow: /socket.io/
 
 Sitemap: https://relay.rishishah.in/sitemap.xml
