@@ -7,7 +7,7 @@ date: 2026-10-28
 updated: 2026-10-28
 order: 22
 keywords: send files from phone to pc, transfer files android to pc wirelessly, iphone to windows file transfer, phone to laptop file transfer
-related: send-files-from-iphone-to-android, share-files-on-same-wifi, airdrop-alternative, browser-to-browser-file-transfer
+related: shareit-alternative, quick-share-alternative, send-files-from-iphone-to-android, share-files-on-same-wifi, airdrop-alternative
 ---
 **To move files from a phone to a computer without a cable, open Relay on both, connect them, and send.** The files go straight across your Wi-Fi at full quality, and on Chrome or Edge the PC can save big files directly to a folder.
 

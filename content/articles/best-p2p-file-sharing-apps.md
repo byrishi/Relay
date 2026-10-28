@@ -7,7 +7,7 @@ date: 2026-10-28
 updated: 2026-10-28
 order: 4
 keywords: best p2p file sharing app, p2p file transfer app, best file sharing app, file sharing apps comparison, peer to peer file transfer tools
-related: relay-vs-localsend, relay-vs-pairdrop, relay-vs-wormhole, airdrop-alternative
+related: best-free-file-transfer-sites, shareit-alternative, relay-vs-localsend, relay-vs-pairdrop, relay-vs-wormhole
 ---
 **Short answer:** for sending files between any two devices without installing anything, use a browser-based P2P tool such as **Relay** or **PairDrop**. For transfers on one local network with a native app, **LocalSend** is excellent. For the command line, **Magic Wormhole**. Inside one ecosystem, **AirDrop** (Apple) or **Quick Share** (Android/Windows) are the most convenient.
 

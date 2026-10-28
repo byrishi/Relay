@@ -7,7 +7,7 @@ date: 2026-10-28
 updated: 2026-10-28
 order: 26
 keywords: send large video files, send big video files, share 4k video, send video without compression, transfer large videos
-related: best-way-to-send-large-files, resume-interrupted-file-transfer, send-files-from-iphone-to-android, relay-vs-wetransfer
+related: send-large-videos-on-whatsapp, file-size-limits, best-way-to-send-large-files, resume-interrupted-file-transfer, send-files-from-iphone-to-android
 ---
 **To send a large video at full quality, transfer the original file directly to the other device instead of through a messaging app or a capped cloud service.** With Relay there's no size limit and no compression; the video arrives byte for byte.
 

@@ -7,7 +7,7 @@ date: 2026-05-24
 updated: 2026-10-28
 order: 41
 keywords: wetransfer alternative, free wetransfer alternative, wetransfer alternative no limit, send files like wetransfer
-related: relay-vs-wetransfer, best-way-to-send-large-files, relay-vs-wormhole, best-p2p-file-sharing-apps
+related: best-free-file-transfer-sites, is-wetransfer-safe, relay-vs-wetransfer, best-way-to-send-large-files, relay-vs-wormhole
 ---
 **If WeTransfer's free plan (3 GB per 30 days, links expire after 3 days) is holding you back, the best free alternative depends on one question: will the recipient be online at the same time as you?** If yes, send it directly with a peer-to-peer tool like Relay. If not, use an encrypted link service or a cloud drive.
 

@@ -7,7 +7,7 @@ date: 2026-05-24
 updated: 2026-10-28
 order: 11
 keywords: private file transfer, private file sharing, anonymous file transfer, share files privately, confidential file transfer
-related: secure-file-sharing, end-to-end-encrypted-file-transfer, send-files-without-uploading, temporary-file-sharing
+related: send-files-without-signup, secure-file-sharing, end-to-end-encrypted-file-transfer, send-files-without-uploading, temporary-file-sharing
 ---
 **A private file transfer keeps the content readable only by you and the recipient, leaves no copy on anyone's servers, and collects as little information about you as possible.** Relay is designed around all three.
 
