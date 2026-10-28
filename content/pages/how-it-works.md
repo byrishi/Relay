@@ -10,7 +10,7 @@ Relay moves a file from your device to someone else's without storing it anywher
 
 ## 1. The devices find each other
 
-Both browsers connect to Relay's small signaling server. You share a room code (like `amber-fox-123`), a QR code or an invite link, or you tap a device in the **Nearby** list if you are on the same network. The server's only job is to pass a few connection messages between the two browsers. It never sees your files, file names or messages.
+Both browsers connect to Relay's small signaling server. You share a room code (like `satya-ganga-108`), a QR code or an invite link, or you tap a device in the **Nearby** list if you are on the same network. The server's only job is to pass a few connection messages between the two browsers. It never sees your files, file names or messages.
 
 ## 2. A direct, encrypted connection
 

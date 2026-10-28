@@ -12,7 +12,7 @@ It works in any modern browser: Chrome, Edge, Firefox and Safari, on Windows, ma
 
 ## How to send a file
 
-1. Open [relay.rishishah.in](/) and press **Start sending**. You get a code like `amber-fox-123` and a QR code.
+1. Open [relay.rishishah.in](/) and press **Start sending**. You get a code like `satya-ganga-108` and a QR code.
 2. On the other device, open Relay and type the code or scan the QR. On the same Wi-Fi, just tap the device under **Nearby**.
 3. Approve the device, drop your files, folders or a screenshot, and the other side presses **Accept**.
 
