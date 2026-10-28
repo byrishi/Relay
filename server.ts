@@ -100,11 +100,10 @@ async function startServer() {
         'default-src': ["'self'"],
         'script-src': ["'self'"],
         'style-src': ["'self'", "'unsafe-inline'"],
-        'img-src': ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
+        'img-src': ["'self'", 'data:', 'blob:'],
         'media-src': ["'self'", 'blob:'],
         'font-src': ["'self'", 'data:'],
-        // iconify APIs: the footer's brand icons are fetched at runtime
-        'connect-src': ["'self'", 'wss:', 'ws:', 'https://api.iconify.design', 'https://api.unisvg.com', 'https://api.simplesvg.com', ...backendOrigins],
+        'connect-src': ["'self'", 'wss:', 'ws:', ...backendOrigins],
         'worker-src': ["'self'", 'blob:'],
         'manifest-src': ["'self'"],
         'object-src': ["'none'"],
@@ -350,13 +349,41 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    const fs = await import('fs');
+    let redirects: Record<string, string> = {};
+    try { redirects = JSON.parse(fs.readFileSync(path.join(distPath, 'redirects.json'), 'utf8')); } catch { /* none */ }
+
+    // Old URLs -> their replacement (301 keeps search ranking)
+    app.use((req, res, next) => {
+      const slug = req.path.replace(/^\/+|\/+$/g, '');
+      if (redirects[slug]) return res.redirect(301, `/${redirects[slug]}`);
+      if (req.path.length > 1 && req.path.endsWith('/')) return res.redirect(301, req.path.slice(0, -1));
+      next();
+    });
+
+    // AI agents that ask for markdown get the clean .md version of any page
+    app.use((req, res, next) => {
+      if (req.method !== 'GET' || path.extname(req.path)) return next();
+      const accept = String(req.headers.accept || '');
+      if (!/text\/markdown/.test(accept) || /text\/html/.test(accept.split('text/markdown')[0])) return next();
+      const file = path.join(distPath, (req.path === '/' ? 'index' : req.path.slice(1)) + '.md');
+      if (file.startsWith(distPath) && fs.existsSync(file)) {
+        res.type('text/markdown; charset=utf-8');
+        return res.sendFile(file);
+      }
+      next();
+    });
+
     app.use(express.static(distPath, {
+      extensions: ['html'],
       setHeaders(res, file) {
         if (file.endsWith('sw.js') || file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
         else if (/[\\/]assets[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        if (file.endsWith('.md')) res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
       },
     }));
-    app.get('*all', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    // Unknown paths: real 404 status (the app shows a friendly page)
+    app.use((req, res) => res.status(404).sendFile(path.join(distPath, '404.html')));
   }
 
   const shutdown = () => {

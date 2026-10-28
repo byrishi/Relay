@@ -217,7 +217,7 @@ export default function Home() {
       onDragOver={(e) => e.preventDefault()}
       onDragEnter={(e) => { e.preventDefault(); if (relay.appState === 'CONNECTED') setDragging(true); }}
       onDragLeave={(e) => { e.preventDefault(); if (e.currentTarget === e.target) setDragging(false); }}>
-      <main className="w-full max-w-[100vw] flex flex-col z-10 flex-1 relative min-h-[calc(100vh-96px)]">
+      <div className="w-full max-w-[100vw] flex flex-col z-10 flex-1 relative min-h-[calc(100vh-96px)]">
         {shared.length > 0 && (
           <div className={cn(glass, 'mx-auto mt-6 rounded-xl px-4 py-3 flex items-center gap-3 text-sm text-white max-w-xl w-[calc(100%-2rem)]')}>
             <Share2 className="w-4 h-4 text-brand-neon shrink-0" />
@@ -236,7 +236,7 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </div>
 
       {/* nearby invitation */}
       <AnimatePresence>
