@@ -180,3 +180,9 @@ details[open]::details-content { height: auto; }
 .cursor-label { position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%) translateY(-4px); padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 500; line-height: 1.2; white-space: nowrap; background: var(--cc); color: var(--color-signal); opacity: 0; transition: opacity .2s, transform .25s; }
 .cursor:not([data-blue="1"]) .cursor-label { color: #fff; }
 .cursor-label[data-show="1"] { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Cover painted before the app loads when the entry screen will show (see public/entry-gate.js).
+   Fades away on its own after a few seconds in case the app never starts. */
+html.entry-pending { overflow: hidden; }
+html.entry-pending body::before { content: ""; position: fixed; inset: 0; z-index: 399; background: var(--color-signal); animation: gate-out .4s ease 6s forwards; }
+@keyframes gate-out { to { opacity: 0; visibility: hidden; } }

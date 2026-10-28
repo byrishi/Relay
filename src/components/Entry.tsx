@@ -21,6 +21,9 @@ export default function Entry() {
   const enterRef = useRef<HTMLButtonElement>(null);
   const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // The entry now paints its own sheet, so the pre-paint cover can go.
+  useEffect(() => { document.documentElement.classList.remove('entry-pending'); }, []);
+
   useEffect(() => {
     if (!open) return;
     setScrollLock(true);
