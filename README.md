@@ -209,7 +209,8 @@ npm run dev
 ## Frontend
 
 ```env
-VITE_SIGNALING_SERVER=wss://your-domain.com
+# Only needed when the frontend is hosted separately from the Node server
+VITE_BACKEND_URL=https://your-signaling-server.com
 
 # Optional TURN fallback (only used when a direct connection is impossible)
 VITE_TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349
