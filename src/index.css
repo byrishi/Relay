@@ -186,3 +186,7 @@ details[open]::details-content { height: auto; }
 html.entry-pending { overflow: hidden; }
 html.entry-pending body::before { content: ""; position: fixed; inset: 0; z-index: 399; background: var(--color-signal); animation: gate-out .4s ease 6s forwards; }
 @keyframes gate-out { to { opacity: 0; visibility: hidden; } }
+
+/* Scanner: the line sweeps the viewfinder */
+.scan-line { top: 12%; animation: scan 2.2s cubic-bezier(.45,0,.55,1) infinite alternate; }
+@keyframes scan { to { top: 86%; } }
