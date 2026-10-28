@@ -1,17 +1,16 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { MotionConfig } from 'motion/react';
-import { Menu, X, Github, Moon, Sun } from 'lucide-react';
+import { MotionConfig, AnimatePresence, motion } from 'motion/react';
 
 import Home from './pages/Home';
 import VerifyIdentity from './pages/VerifyIdentity';
 import AIFooter from './components/AIFooter';
-import ScrollToTop from './components/ScrollToTop';
+import Cursor from './components/Cursor';
+import { RouteCurtain } from './components/Intro';
 import { RelayLogo } from './brand/Logo';
 import { applyHead } from './content/head';
 import { HOME, SITE } from './content/site';
-import { atmosphere, setAtmosphere } from './lib/atmosphere';
-import { useDesign, setDesign, Design } from './lib/design';
+import { startSmoothScroll, scrollToTop, setScrollLock } from './lib/scroll';
 
 // Articles and content pages (markdown) load on demand, keeping the app bundle small.
 const DocRoute = lazy(() => import('./pages/Docs').then((m) => ({ default: m.DocRoute })));
@@ -24,57 +23,49 @@ const NAV = [
   { to: '/verify-identity', label: 'Verify' },
 ];
 
-/** Lets visitors flip between the two designs while we choose one. */
-function DesignSwitch({ className = '' }: { className?: string }) {
-  const design = useDesign();
-  const opts: [Design, string, typeof Moon][] = [['dark', 'Dark', Moon], ['light', 'Light', Sun]];
-  return (
-    <div role="group" aria-label="Design" className={`inline-flex p-[3px] rounded-full bg-tint/[0.05] ring ${className}`}>
-      {opts.map(([d, label, Icon]) => (
-        <button key={d} type="button" onClick={() => setDesign(d)} aria-pressed={design === d}
-          className={`h-[28px] px-3 rounded-full text-[13px] inline-flex items-center gap-1.5 transition-colors ${design === d ? 'bg-bg text-fg shadow-[0_1px_3px_rgb(0_0_0/0.25)] ring' : 'text-fg-3 hover:text-fg'}`}>
-          <Icon className="w-3.5 h-3.5" aria-hidden="true" />{label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function Header() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => { setScrollLock(open); }, [open]);
   return (
-    <header className="sticky top-0 z-50 bg-bg/70 backdrop-blur-xl border-b border-line">
-      <div className="mx-auto max-w-[1200px] h-16 px-6 flex items-center justify-between gap-6">
-        <Link to="/" aria-label="Relay home" className="flex items-center rounded-lg"><RelayLogo /></Link>
-        <nav className="hidden lg:flex items-center gap-8 text-[14px]" aria-label="Main">
+    <header className="sticky top-0 z-50 bg-bg/95 border-b border-line">
+      <div className="wrap h-16 flex items-center gap-8">
+        <Link to="/" aria-label="Relay home" className="group shrink-0"><RelayLogo /></Link>
+        <nav className="hidden lg:flex items-center gap-1 ml-6" aria-label="Main">
           {NAV.map(({ to, label }) => (
             <Link key={to} to={to} aria-current={location.pathname === to ? 'page' : undefined}
-              className={`transition-colors ${location.pathname === to ? 'text-fg' : 'text-fg-2 hover:text-fg'}`}>{label}</Link>
+              className={`h-10 px-3.5 inline-flex items-center rounded-full text-[15.5px] transition-colors ${location.pathname === to ? 'bg-pale text-signal' : 'text-ink-2 hover:text-ink hover:bg-bg-2'}`}>{label}</Link>
           ))}
         </nav>
-        <div className="hidden lg:flex items-center gap-2.5">
-          <DesignSwitch />
-          <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="btn btn-g">
-            <Github className="w-4 h-4" aria-hidden="true" />GitHub<span className="sr-only"> (opens in a new tab)</span>
+        <div className="ml-auto flex items-center gap-2">
+          <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex h-10 px-3.5 items-center rounded-full text-[15.5px] text-ink-2 hover:text-ink hover:bg-bg-2">
+            GitHub<span className="sr-only"> (opens in a new tab)</span>
           </a>
-          <Link to="/" className="btn btn-w">Start sending</Link>
-        </div>
-        <div className="lg:hidden flex items-center gap-1 -mr-2">
-          <DesignSwitch />
-          <button onClick={() => setOpen(!open)} className="w-11 h-11 rounded-lg flex items-center justify-center text-fg" aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? 'Close menu' : 'Open menu'}>
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          <Link to="/" className="btn btn-signal h-10 px-5 text-[15px]">Send a file</Link>
+          <button onClick={() => setOpen(!open)} className="lg:hidden w-11 h-11 -mr-2 flex items-center justify-center" aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? 'Close menu' : 'Open menu'}>
+            <span className="relative w-5 h-3" aria-hidden="true">
+              <span className={`absolute left-0 right-0 h-[2px] bg-ink transition-transform ${open ? 'top-[5px] rotate-45' : 'top-0'}`} />
+              <span className={`absolute left-0 right-0 h-[2px] bg-ink transition-transform ${open ? 'top-[5px] -rotate-45' : 'top-[10px]'}`} />
+            </span>
           </button>
         </div>
       </div>
-      {open && (
-        <nav id="mobile-nav" className="lg:hidden px-6 pb-6 flex flex-col text-[17px]" aria-label="Mobile">
-          {NAV.map(({ to, label }) => <Link key={to} to={to} className="py-3.5 border-b border-line text-fg">{label}</Link>)}
-          <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="py-3.5 border-b border-line text-fg">GitHub</a>
-          <Link to="/" className="btn btn-w btn-lg mt-5">Start sending</Link>
-        </nav>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.nav id="mobile-nav" aria-label="Mobile" className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-signal text-white flex flex-col"
+            initial={{ clipPath: 'inset(0 0 100% 0)' }} animate={{ clipPath: 'inset(0 0 0% 0)' }} exit={{ clipPath: 'inset(0 0 100% 0)' }} transition={{ duration: 0.45, ease: [0.76, 0, 0.24, 1] }}>
+            <div className="wrap pt-4 flex flex-col">
+              {[...NAV, { to: '/', label: 'Send a file' }].map(({ to, label }, i) => (
+                <motion.div key={to} initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.12 + i * 0.05 }}>
+                  <Link to={to} className="block py-2.5 display text-[52px]" style={{ ['--w' as string]: 3 }}>{label}</Link>
+                </motion.div>
+              ))}
+              <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="mt-8 text-white/80 underline underline-offset-4">Source code on GitHub</a>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
@@ -91,47 +82,55 @@ const FOOTER: { title: string; links: [string, string][] }[] = [
   ] },
 ];
 
-function MotionToggle() {
-  const [still, setStill] = useState(atmosphere.still);
-  const toggle = () => {
-    const v = !still;
-    setStill(v);
-    setAtmosphere({ still: v });
-    try { localStorage.setItem('relay-motion', v ? 'off' : 'on'); } catch { /* ignore */ }
-  };
+/** Sets a line of display type so it exactly fills its container's width. */
+function FitWord({ text, w = 9 }: { text: string; w?: number }) {
+  const box = useRef<HTMLDivElement>(null);
+  const word = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const fit = () => {
+      const b = box.current, t = word.current;
+      if (!b || !t) return;
+      t.style.fontSize = '100px';
+      t.style.fontSize = `${(100 * b.clientWidth) / t.scrollWidth}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(box.current!);
+    document.fonts?.ready.then(fit);
+    return () => ro.disconnect();
+  }, [text]);
   return (
-    <button onClick={toggle} aria-pressed={!still} className="hover:text-fg">
-      Background animation: {still ? 'off' : 'on'}
-    </button>
+    <div ref={box} className="overflow-hidden" aria-hidden="true">
+      <span ref={word} className="display inline-block whitespace-nowrap leading-[.78] pt-[2%]" style={{ ['--w' as string]: w }}>{text}</span>
+    </div>
   );
 }
 
 function Footer() {
   return (
-    <footer className="relative z-10 mt-auto pt-32">
-      <AIFooter />
-      <div className="border-t border-line">
-        <div className="max-w-[1200px] mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-12 gap-10">
-          <div className="col-span-2 md:col-span-5">
-            <RelayLogo />
-            <p className="text-fg-2 text-[14.5px] mt-4 max-w-[34ch] leading-relaxed">Peer-to-peer file transfer that never uploads your files. Free and open source.</p>
+    <footer className="relative z-10 mt-auto pt-32 md:pt-48">
+      <div className="wrap">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-y-10 border-t border-line pt-10">
+          <div className="col-span-2 md:col-span-5 md:pr-10">
+            <p className="text-ink-2 max-w-[34ch] leading-relaxed">Peer-to-peer file transfer that never uploads your files. Free and open source, made in Ahmedabad by <a href={SITE.author.url} target="_blank" rel="noopener noreferrer" className="link text-ink">{SITE.author.name}</a>.</p>
+            <AIFooter />
           </div>
-          {FOOTER.map((col) => (
-            <div key={col.title} className="md:col-span-2 first-of-type:md:col-start-7">
-              <h2 className="text-[13px] font-medium text-fg">{col.title}</h2>
-              <ul className="mt-4 flex flex-col gap-3 text-[14px]">
-                {col.links.map(([to, label]) => <li key={to}><Link to={to} className="text-fg-2 hover:text-fg">{label}</Link></li>)}
+          {FOOTER.map((col, i) => (
+            <div key={col.title} className={`md:col-span-2 ${i === 0 ? 'md:col-start-7' : ''}`}>
+              <h2 className="text-[14px] text-ink-3">{col.title}</h2>
+              <ul className="mt-4 flex flex-col gap-2 text-[15.5px]">
+                {col.links.map(([to, label]) => <li key={to}><Link to={to} className="hover:text-signal">{label}</Link></li>)}
               </ul>
             </div>
           ))}
         </div>
-        <div className="max-w-[1200px] mx-auto px-6 py-8 border-t border-line flex flex-col md:flex-row gap-4 md:items-center justify-between text-[13px] text-fg-3">
-          <p>© 2026 Relay. MIT licensed. Built by <a href={SITE.author.url} target="_blank" rel="noopener noreferrer" className="text-fg-2 underline underline-offset-4 decoration-tint/25 hover:text-fg">{SITE.author.name}</a>.</p>
+        <div className="mt-16 md:mt-24 text-signal"><FitWord text="Relay" w={7} /></div>
+        <div className="py-6 flex flex-col md:flex-row gap-3 md:items-center justify-between text-[14px] text-ink-3">
+          <p>© 2026 Relay. MIT licence.</p>
           <p className="flex flex-wrap gap-x-6 gap-y-2">
-            <MotionToggle />
-            <Link to="/self-hosted-file-sharing" className="hover:text-fg">Self-host</Link>
-            <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-fg">Source code</a>
-            <a href="/llms.txt" className="hover:text-fg">llms.txt</a>
+            <Link to="/self-hosted-file-sharing" className="hover:text-ink">Self-host it</Link>
+            <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-ink">Source code</a>
+            <a href="/llms.txt" className="hover:text-ink">llms.txt</a>
           </p>
         </div>
       </div>
@@ -146,12 +145,19 @@ function HomeRoute() {
   return <Home />;
 }
 
+function ScrollReset() {
+  const { pathname } = useLocation();
+  useEffect(() => { scrollToTop(); }, [pathname]);
+  return null;
+}
+
 export default function App() {
+  useEffect(() => { startSmoothScroll(); }, []);
   return (
     <MotionConfig reducedMotion="user">
-      <div className={`min-h-screen relative flex flex-col font-sans text-fg bg-bg overflow-x-hidden w-full max-w-[100vw]`}>
-        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-fg focus:text-bg focus:font-medium">Skip to content</a>
-        <ScrollToTop />
+      <div className="min-h-screen relative flex flex-col font-sans text-ink bg-bg overflow-x-hidden w-full max-w-[100vw]">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[400] focus:px-4 focus:py-2 focus:bg-signal focus:text-white focus:rounded-full focus:font-medium">Skip to content</a>
+        <ScrollReset />
         <Header />
         <main id="main" tabIndex={-1} className="flex-1 flex flex-col relative z-10 outline-none">
           <Suspense fallback={<div className="min-h-[60vh]" />}>
@@ -165,6 +171,8 @@ export default function App() {
           </Suspense>
         </main>
         <Footer />
+        <RouteCurtain />
+        <Cursor />
       </div>
     </MotionConfig>
   );
