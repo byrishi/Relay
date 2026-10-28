@@ -28,7 +28,6 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@fontsource/instrument-serif": "^5.3.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.1.14",
     "@types/express": "^4.17.21",
@@ -42,7 +41,6 @@
     "lucide-react": "^0.546.0",
     "marked": "^15.0.12",
     "motion": "^12.23.24",
-    "qrcode.react": "^4.2.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.15.1",
@@ -51,6 +49,7 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "uqr": "^0.1.2",
     "vite": "^6.2.3"
   }
 }

@@ -70,11 +70,11 @@ void main() {
   vec3 p; vec3 col; float a; float size; float streak = 0.0;
 
   // where the R sits in each state
-  vec3 cLand  = vec3(mix(0.0, 2.3, uWide), mix(1.9, 0.95, uWide), -5.0);
-  float sLand = mix(1.45, 2.55, uWide);
+  vec3 cLand  = vec3(mix(0.0, max(2.3, uAspect * 2.2), uWide), mix(3.0, 1.35, uWide), -5.0);
+  float sLand = mix(1.0, 2.2, uWide);
   vec3 cLobby = vec3(0.0, 0.9, -5.8);
   float sLobby = mix(2.7, 3.8, uWide);
-  vec3 cA = vec3(-mix(1.2, max(3.8, uAspect * 3.3), uWide), mix(2.6, 0.95, uWide), -5.8);
+  vec3 cA = vec3(-mix(1.2, max(3.8, uAspect * 3.3), uWide), mix(2.6, 1.3, uWide), -5.8);
   vec3 cB = vec3(-cA.x, cA.y, cA.z);
   float sConn = mix(0.8, 1.55, uWide);
 
@@ -221,27 +221,19 @@ uniform vec3 uMode;
 out vec4 o;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
-  // warm paper, cooler at the top, with indigo and coral haze
-  vec3 top = vec3(0.925, 0.933, 0.965);
-  vec3 bot = vec3(0.965, 0.941, 0.910);
-  vec3 col = mix(bot, top, smoothstep(0.0, 1.0, vUv.y));
-  vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
-  vec2 h1 = q - vec2(-0.6, 0.38), h2 = q - vec2(0.62, -0.22);
-  col = mix(col, vec3(0.80, 0.82, 0.98), 0.38 * exp(-dot(h1, h1) * 2.0));
-  col = mix(col, vec3(1.00, 0.84, 0.76), 0.42 * exp(-dot(h2, h2) * 1.8));
+  // night background with a faint indigo haze up top
+  vec3 col = vec3(0.020, 0.027, 0.047);
+  vec2 q = (vUv - vec2(0.5, 0.62)) * vec2(uAspect, 1.0);
+  col += vec3(0.07, 0.07, 0.20) * exp(-dot(q, q) * 2.2);
 
-  // soft coloured glow from the blurred dots (the haze under the temple)
+  // coloured glow from the blurred dots
   vec4 g = texture(uGlow, vUv);
   vec3 gc = g.a > 0.0005 ? g.rgb / g.a : vec3(0.0);
-  float ga = clamp(g.a * (1.1 + uPulse * 2.5 + uEnergy * uMode.z * 1.2), 0.0, 0.55);
-  col = mix(col, mix(col, gc, 0.55), ga);
+  float ga = clamp(g.a * (1.2 + uPulse * 2.5 + uEnergy * uMode.z * 1.4), 0.0, 0.6);
+  col += gc * ga * 0.55;
 
   vec4 s = texture(uScene, vUv);
   col = col * (1.0 - s.a) + s.rgb;
-
-  // morning mist over the horizon
-  float hz = exp(-pow((vUv.y - 0.33) * 5.5, 2.0));
-  col = mix(col, vec3(0.972, 0.965, 0.952), hz * 0.32);
   col += (hash(vUv * 1000.0 + fract(uTime) * 100.0) - 0.5) * 0.012;
   o = vec4(col, 1.0);
 }`;
@@ -312,7 +304,8 @@ export default function Atmosphere() {
     }
 
     // meadow, mark A, sky, mark B, stream
-    const counts = mobile ? [11000, 6000, 2200, 6000, 3500] : [24000, 11000, 5000, 11000, 7000];
+    // Dark theme: only the two marks and the stream between them (no meadow, no sky).
+    const counts = mobile ? [0, 6000, 0, 6000, 3500] : [0, 11000, 0, 11000, 7000];
     const total = counts.reduce((a, b) => a + b, 0);
     const seeds = new Float32Array(total * 4);
     const kinds = new Float32Array(total);
@@ -494,7 +487,7 @@ export default function Atmosphere() {
       ref={ref}
       aria-hidden="true"
       className="fixed inset-0 w-full h-full z-0 pointer-events-none"
-      style={{ background: 'linear-gradient(180deg, #ECEEF6 0%, #F6F0E8 100%)' }}
+      style={{ background: '#05070C' }}
     />
   );
 }

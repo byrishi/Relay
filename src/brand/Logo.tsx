@@ -1,32 +1,42 @@
+import { useId } from 'react';
 import { MARK_ASPECT, MARK_BARS } from './mark';
 
-/** The original Relay "R" scan-line mark. Inherits colour from `currentColor`. */
-export function RelayMark({ className = '', title }: { className?: string; title?: string }) {
+/** Brand gradient, top to bottom: indigo, violet, coral (the colours of the particle R). */
+export const MARK_STOPS: [number, string][] = [[0, '#8B90FF'], [0.55, '#B08CFF'], [1, '#FF8A5C']];
+/** Deeper version of the same gradient, for light backgrounds. */
+export const MARK_STOPS_DEEP: [number, string][] = [[0, '#3F46D6'], [0.55, '#7444D4'], [1, '#D9481C']];
+
+/**
+ * The original Relay "R": 34 horizontal scan-lines.
+ * `gradient` paints it in the brand gradient; otherwise it uses currentColor.
+ */
+export function RelayMark({ className = '', title, gradient = true, deep = false }: { className?: string; title?: string; gradient?: boolean; deep?: boolean }) {
+  const id = useId().replace(/:/g, '');
   const h = 100, w = h * MARK_ASPECT;
   return (
-    <svg viewBox={`0 0 ${w.toFixed(2)} ${h}`} className={className} role={title ? 'img' : undefined} aria-hidden={title ? undefined : true} aria-label={title} fill="currentColor">
-      {MARK_BARS.map(([x, y, bw, bh], i) => (
-        <rect key={i} x={(x * w).toFixed(2)} y={(y * h).toFixed(2)} width={(bw * w).toFixed(2)} height={(bh * h).toFixed(2)} />
-      ))}
+    <svg viewBox={`0 0 ${w.toFixed(2)} ${h}`} className={className} role={title ? 'img' : undefined} aria-hidden={title ? undefined : true} aria-label={title}>
+      {gradient && (
+        <defs>
+          <linearGradient id={`rg${id}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={h}>
+            {(deep ? MARK_STOPS_DEEP : MARK_STOPS).map(([o, c]) => <stop key={o} offset={o} stopColor={c} />)}
+          </linearGradient>
+        </defs>
+      )}
+      <g fill={gradient ? `url(#rg${id})` : 'currentColor'}>
+        {MARK_BARS.map(([x, y, bw, bh], i) => (
+          <rect key={i} x={(x * w).toFixed(2)} y={(y * h).toFixed(2)} width={(bw * w).toFixed(2)} height={(bh * h).toFixed(2)} rx={(bh * h / 2).toFixed(2)} />
+        ))}
+      </g>
     </svg>
   );
 }
 
-/** Mark in its navy tile, exactly like the original favicon. */
-export function RelayTile({ className = '' }: { className?: string }) {
-  return (
-    <span className={`inline-flex items-center justify-center bg-brand text-white rounded-[22%] ${className}`} aria-hidden="true">
-      <RelayMark className="h-[62%] w-auto" />
-    </span>
-  );
-}
-
-/** Tile + "RELAY" wordmark set in Geist Pixel Line (the same scan-line language as the mark). */
+/** Mark + wordmark. */
 export function RelayLogo({ className = '' }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <RelayTile className="w-8 h-8 md:w-9 md:h-9" />
-      <span className="font-pixel-line text-[26px] md:text-[30px] leading-none tracking-tight text-ink">RELAY</span>
+      <RelayMark className="h-[30px] w-auto" />
+      <span className="text-[18px] font-semibold tracking-[-0.025em] leading-none text-fg">Relay</span>
     </span>
   );
 }

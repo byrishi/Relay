@@ -140,48 +140,44 @@ export function headForIndex(): Head {
 
 // ── Markup ───────────────────────────────────────────────────────────────────
 const PROSE = [
-  'prose prose-lg max-w-none',
-  'prose-headings:font-sans prose-headings:font-semibold prose-headings:tracking-[-0.02em] prose-headings:text-ink',
-  'prose-h2:text-[28px] md:prose-h2:text-[34px] prose-h2:mt-14 prose-h2:mb-5 prose-h3:text-xl prose-h3:mt-8',
-  'prose-p:text-ink-2 prose-p:leading-relaxed prose-li:text-ink-2 prose-strong:text-ink prose-li:marker:text-ink-3',
-  'prose-a:text-indigo prose-a:underline prose-a:decoration-indigo/30 prose-a:underline-offset-4 hover:prose-a:decoration-indigo',
-  'prose-code:text-ink prose-code:bg-paper prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:font-medium prose-code:before:content-none prose-code:after:content-none',
-  'prose-th:text-ink prose-td:text-ink-2 prose-table:text-sm prose-thead:border-ink/15 prose-tr:border-ink/10',
-  'prose-blockquote:border-indigo/40 prose-blockquote:text-ink-2 prose-blockquote:font-serif prose-blockquote:text-2xl prose-blockquote:not-italic',
-  'prose-hr:border-ink/10',
+  'prose prose-invert max-w-none text-[16.5px]',
+  'prose-headings:font-semibold prose-headings:tracking-[-0.03em] prose-headings:text-fg',
+  'prose-h2:text-[28px] prose-h2:mt-14 prose-h2:mb-4 prose-h3:text-[20px] prose-h3:mt-9',
+  'prose-p:text-fg-2 prose-p:leading-[1.75] prose-li:text-fg-2 prose-li:leading-[1.7] prose-strong:text-fg prose-li:marker:text-fg-3',
+  'prose-a:text-fg prose-a:font-normal prose-a:underline prose-a:decoration-white/25 prose-a:underline-offset-4 hover:prose-a:decoration-white',
+  'prose-code:text-fg prose-code:bg-white/[0.06] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:font-normal prose-code:before:content-none prose-code:after:content-none',
+  'prose-pre:bg-s1 prose-pre:ring-1 prose-pre:ring-white/10',
+  'prose-th:text-fg prose-th:font-medium prose-td:text-fg-2 prose-table:text-[14.5px] prose-thead:border-white/15 prose-tr:border-white/[0.08]',
+  'prose-blockquote:border-acc/50 prose-blockquote:text-fg-2 prose-blockquote:not-italic prose-blockquote:font-normal',
+  'prose-hr:border-white/10',
 ].join(' ');
 
-// a white reading sheet over the daylight scene
-const PANEL = 'card-solid rounded-[36px]';
-
-const card = 'group block p-6 rounded-3xl bg-white border border-ink/10 hover:border-ink/30 hover:-translate-y-0.5 transition-all';
-const pill = 'inline-flex items-center h-7 px-3 rounded-full bg-paper text-ink-2 font-mono text-[11px] tracking-[0.16em] uppercase';
-const eyebrow = 'font-mono text-[11px] tracking-[0.18em] uppercase text-ink-3';
+const card = 'group block p-6 rounded-2xl panel hover:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.2)] transition-shadow';
 
 function relatedHtml(related: Doc[]) {
   if (!related.length) return '';
-  return `<nav aria-label="Related guides" class="mt-16"><h2 class="${eyebrow} mb-5">Related guides</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-3">${related.map((d) => `<a href="/${d.slug}" data-internal="true" class="${card}"><span class="${eyebrow}">${esc(d.category)}</span><span class="block text-ink text-lg font-semibold tracking-tight mt-2 leading-snug">${esc(d.h1)}</span><span class="block text-ink-2 text-sm mt-1.5 leading-relaxed">${esc(d.description)}</span></a>`).join('')}</div></nav>`;
+  return `<nav aria-label="Related guides" class="mt-20 pt-10 border-t border-line"><h2 class="text-[13px] font-medium text-fg-3 mb-5">Related guides</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">${related.map((d) => `<a href="/${d.slug}" data-internal="true" class="${card}"><span class="text-[12.5px] text-acc">${esc(d.category)}</span><span class="block text-fg text-[16.5px] font-semibold tracking-[-0.02em] mt-1.5 leading-snug">${esc(d.h1)}</span><span class="block text-fg-2 text-[14px] mt-1.5 leading-relaxed">${esc(d.description)}</span></a>`).join('')}</div></nav>`;
 }
 
-const ctaHtml = `<aside class="mt-16 p-8 md:p-10 rounded-[28px] bg-ink text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-<div><p class="text-2xl md:text-3xl font-semibold tracking-tight m-0">Send a file directly, <em class="font-serif italic font-normal">right now</em></p><p class="text-white/80 mt-2 mb-0">Free and open source. No account, no upload, encrypted end to end.</p></div>
-<a href="/" data-internal="true" class="h-12 px-7 inline-flex items-center rounded-full bg-white text-ink font-medium hover:bg-paper transition-colors shrink-0">Open Relay</a></aside>`;
+const ctaHtml = `<aside class="mt-16 relative overflow-hidden p-8 md:p-10 rounded-2xl panel flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div><p class="text-[22px] md:text-[26px] font-semibold tracking-[-0.03em] m-0 text-fg">Send a file directly, right now.</p><p class="text-fg-2 mt-2 mb-0">Free and open source. No account, no upload, encrypted end to end.</p></div>
+<a href="/" data-internal="true" class="btn btn-w btn-lg shrink-0">Start sending</a></aside>`;
 
 export function renderDocPage(doc: Doc, related: Doc[]): string {
   const isArticle = doc.kind === 'article';
   const crumbs = isArticle
-    ? `<nav aria-label="Breadcrumb" class="text-sm text-ink-3 mb-8"><a href="/" data-internal="true" class="hover:text-ink">Relay</a> <span aria-hidden="true">/</span> <a href="/articles" data-internal="true" class="hover:text-ink">Guides</a> <span aria-hidden="true">/</span> <span class="text-ink-2">${esc(doc.category)}</span></nav>`
+    ? `<nav aria-label="Breadcrumb" class="text-[13.5px] text-fg-3 mb-10"><a href="/articles" data-internal="true" class="hover:text-fg">Guides</a> <span aria-hidden="true" class="mx-1.5">/</span> <span class="text-fg-2">${esc(doc.category)}</span></nav>`
     : '';
   const meta = isArticle
-    ? `<p class="text-sm text-ink-3 mt-6">By <a href="${SITE.author.url}" rel="author" class="text-ink underline underline-offset-4 decoration-ink/30 hover:decoration-ink">${esc(SITE.author.name)}</a> · Updated <time datetime="${doc.updated}">${fmtDate(doc.updated)}</time> · ${doc.readingMinutes} min read</p>`
+    ? `<p class="text-[13.5px] text-fg-3 mt-8">By <a href="${SITE.author.url}" rel="author" class="text-fg-2 hover:text-fg">${esc(SITE.author.name)}</a> <span aria-hidden="true" class="mx-1">·</span> Updated <time datetime="${doc.updated}">${fmtDate(doc.updated)}</time> <span aria-hidden="true" class="mx-1">·</span> ${doc.readingMinutes} min read</p>`
     : '';
-  return `<div class="w-full max-w-[860px] mx-auto px-3 md:px-6 py-6 md:py-12"><div class="${PANEL} px-6 md:px-16 py-10 md:py-16 text-ink">
-${crumbs}<header><span class="${pill} mb-6">${esc(doc.category)}</span>
-<h1 class="text-[40px] md:text-[56px] font-semibold tracking-[-0.035em] leading-[1.04]">${esc(doc.h1)}</h1>
-<p class="text-lg md:text-xl text-ink-2 mt-6 leading-relaxed">${esc(doc.description)}</p>${meta}</header>
-<hr class="mt-10 border-ink/10" />
-<article class="${PROSE} mt-10">${renderMarkdown(doc.body)}</article>
+  return `<div class="relative w-full"><div class="hero-glow absolute left-1/2 -translate-x-1/2 -top-56 w-[1000px] h-[640px] pointer-events-none" aria-hidden="true"></div>
+<div class="relative w-full max-w-[740px] mx-auto px-6 pt-16 md:pt-24 pb-8 text-fg">
+${crumbs}<header>
+<h1 class="text-[40px] md:text-[56px] font-semibold tracking-[-0.045em] leading-[1.02] h-hero pb-1">${esc(doc.h1)}</h1>
+<p class="text-[18px] md:text-[20px] text-fg-2 mt-6 leading-relaxed">${esc(doc.description)}</p>${meta}</header>
+<article class="${PROSE} mt-12 pt-12 border-t border-line">${renderMarkdown(doc.body)}</article>
 ${relatedHtml(related)}${ctaHtml}</div></div>`;
 }
 
@@ -193,21 +189,22 @@ export function renderDocsIndex(articles: Doc[]): string {
   }
   const order = ['Guide', 'How-to', 'Security', 'Comparison', 'Alternatives', 'Explainer'];
   const cats = [...groups.keys()].sort((a, b) => (order.indexOf(a) + 99) % 99 - (order.indexOf(b) + 99) % 99);
-  return `<div class="w-full max-w-6xl mx-auto px-5 md:px-8 py-6 md:py-12 text-ink">
-<header class="max-w-3xl"><p class="${eyebrow}">Guides · ${articles.length} articles</p>
-<h1 class="mt-4 text-[44px] md:text-[72px] font-semibold tracking-[-0.045em] leading-[1]">File sharing, <em class="font-serif italic font-normal tracking-normal text-dawn pr-1">explained</em></h1>
-<p class="text-lg md:text-xl text-ink-2 mt-6 leading-relaxed">Plain-language guides to peer-to-peer and secure file transfer, sending large files, and honest comparisons with the tools you already know.</p></header>
-${cats.map((c) => `<section class="mt-16"><h2 class="${eyebrow} mb-5 pb-3 border-b border-ink/15">${esc(c)}</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${groups.get(c)!.sort((a, b) => a.order - b.order || a.h1.localeCompare(b.h1)).map((d) => `<a href="/${d.slug}" data-internal="true" class="${card}"><span class="block text-ink text-lg font-semibold tracking-tight leading-snug">${esc(d.h1)}</span><span class="block text-ink-2 text-sm mt-2 leading-relaxed">${esc(d.description)}</span><span class="mt-4 inline-block text-sm font-medium text-ink group-hover:text-indigo">Read →</span></a>`).join('')}</div></section>`).join('\n')}
-</div>`;
+  return `<div class="relative w-full"><div class="hero-glow absolute left-1/2 -translate-x-1/2 -top-56 w-[1100px] h-[700px] pointer-events-none" aria-hidden="true"></div>
+<div class="relative w-full max-w-[1200px] mx-auto px-6 pt-16 md:pt-24 text-fg">
+<header class="max-w-[720px]"><p class="text-[14px] font-medium text-acc">Guides</p>
+<h1 class="mt-3 text-[44px] md:text-[64px] font-semibold tracking-[-0.045em] leading-[1] h-hero pb-1">File sharing, explained.</h1>
+<p class="text-[18px] md:text-[20px] text-fg-2 mt-6 leading-relaxed">${articles.length} plain-language guides to peer-to-peer and secure file transfer, sending large files, and honest comparisons with the tools you already know.</p></header>
+${cats.map((c) => `<section class="mt-20"><h2 class="text-[20px] font-semibold tracking-[-0.025em] mb-6">${esc(c)}</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${groups.get(c)!.sort((a, b) => a.order - b.order || a.h1.localeCompare(b.h1)).map((d) => `<a href="/${d.slug}" data-internal="true" class="${card}"><span class="block text-fg text-[16.5px] font-semibold tracking-[-0.02em] leading-snug">${esc(d.h1)}</span><span class="block text-fg-2 text-[14px] mt-2 leading-relaxed">${esc(d.description)}</span></a>`).join('')}</div></section>`).join('\n')}
+</div></div>`;
 }
 
 /** What crawlers see on "/" before the app boots (the app replaces it). */
 export function renderHomeStatic(home: Doc, featured: Doc[]): string {
-  return `<div class="w-full max-w-4xl mx-auto px-6 py-20 text-ink">
-<h1 class="text-5xl md:text-7xl font-semibold tracking-[-0.045em] leading-[1]">${esc(home.h1)}</h1>
-<p class="text-lg md:text-xl text-ink-2 mt-6 max-w-2xl">${esc(home.description)}</p>
-<p class="mt-10"><a href="/" class="btn-ink h-14 px-8">Start a transfer</a></p>
+  return `<div class="w-full max-w-[740px] mx-auto px-6 pt-24 text-fg">
+<h1 class="text-[48px] md:text-[72px] font-semibold tracking-[-0.045em] leading-[1] h-hero pb-1">${esc(home.h1)}</h1>
+<p class="text-[18px] md:text-[20px] text-fg-2 mt-6">${esc(home.description)}</p>
+<p class="mt-10"><a href="/" class="btn btn-w btn-lg">Start sending</a></p>
 <article class="${PROSE} text-left mt-20">${renderMarkdown(home.body)}</article>
 ${relatedHtml(featured)}</div>`;
 }
