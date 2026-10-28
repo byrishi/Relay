@@ -12,6 +12,8 @@ export const atmosphere = {
   pulse: 0,
   /** Number of peers shown as luminous nodes in connected mode. */
   peers: 1,
+  /** Reading pages (articles, guides): fade the mark so it sits behind the text. */
+  quiet: false,
   /** User turned the background animation off: draw one still frame. */
   still: (() => { try { return localStorage.getItem('relay-motion') === 'off'; } catch { return false; } })(),
 };

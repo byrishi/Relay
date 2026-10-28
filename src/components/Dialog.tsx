@@ -48,13 +48,13 @@ export default function Dialog({ title, description, onClose, children, dismissi
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[80] bg-ink/30 backdrop-blur-md flex items-center justify-center p-4"
       onMouseDown={(e) => { if (dismissible && e.target === e.currentTarget) onClose(); }}>
       <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={description ? descId : undefined}
         tabIndex={-1} data-testid={testId}
-        className="w-full max-w-md rounded-2xl bg-[#0a0e1c] border border-white/10 shadow-2xl p-6 text-left text-white outline-none">
-        <h2 id={titleId} className="text-lg font-semibold">{title}</h2>
-        {description && <div id={descId} className="text-sm text-white/75 mt-2 leading-relaxed">{description}</div>}
+        className="w-full max-w-md rounded-[28px] card-solid p-7 text-left text-ink outline-none">
+        <h2 id={titleId} className="text-xl font-semibold tracking-tight">{title}</h2>
+        {description && <div id={descId} className="text-[15px] text-ink-2 mt-2 leading-relaxed">{description}</div>}
         <div className="mt-5">{children}</div>
       </div>
     </motion.div>,

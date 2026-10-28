@@ -27,10 +27,10 @@
 </p>
 
 <p align="center">
-  <a href="https://peerlist.io/rishhishah/project/relay" target="_blank" rel="noreferrer"><img src="https://peerlist.io/api/v1/projects/embed/PRJH6A7EDKK7QNB9MI99JDGADGN7RN?showUpvote=true&theme=dark" alt="Relay on Peerlist" height="60" /></a>
+  <a href="https://peerlist.io/rishhishah/project/relay" target="_blank" rel="noreferrer"><img src="https://peerlist.io/api/v1/projects/embed/PRJH6A7EDKK7QNB9MI99JDGADGN7RN?showUpvote=true&theme=light" alt="Relay on Peerlist" height="60" /></a>
 </p>
 
-<p align="center"><img src="docs/screenshots/transfer.png" alt="Relay sending a file: two devices joined by a stream of light, live speed 23.9 MB/s" width="900"></p>
+<p align="center"><img src="docs/screenshots/transfer.png" alt="Relay sending a file: two dotted R marks joined by a river of light, with live speed and progress" width="900"></p>
 
 ## What is Relay?
 
