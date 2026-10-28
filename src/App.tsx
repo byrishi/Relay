@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import VerifyIdentity from './pages/VerifyIdentity';
 import AIFooter from './components/AIFooter';
 import Cursor from './components/Cursor';
+import Sound from './components/Sound';
 import { RouteCurtain } from './components/Intro';
 import { RelayLogo } from './brand/Logo';
 import { applyHead } from './content/head';
@@ -39,6 +40,7 @@ function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <Sound />
           <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hidden lg:inline-flex h-10 px-3.5 items-center rounded-full text-[15.5px] text-ink-2 hover:text-ink hover:bg-bg-2">
             GitHub<span className="sr-only"> (opens in a new tab)</span>
           </a>
@@ -126,7 +128,7 @@ function Footer() {
         </div>
         <div className="mt-16 md:mt-24 text-signal"><FitWord text="Relay" w={7} /></div>
         <div className="py-6 flex flex-col md:flex-row gap-3 md:items-center justify-between text-[14px] text-ink-3">
-          <p>© 2026 Relay. MIT licence.</p>
+          <p>© 2026 Relay. MIT licence. Music: “Relay” by Thepla Theorist and Rishi Shah.</p>
           <p className="flex flex-wrap gap-x-6 gap-y-2">
             <Link to="/self-hosted-file-sharing" className="hover:text-ink">Self-host it</Link>
             <a href={SITE.github} target="_blank" rel="noopener noreferrer" className="hover:text-ink">Source code</a>

@@ -103,7 +103,7 @@ async function startServer() {
         'script-src': ["'self'"],
         'style-src': ["'self'", "'unsafe-inline'"],
         'img-src': ["'self'", 'data:', 'blob:'],
-        'media-src': ["'self'", 'blob:'],
+        'media-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
         'font-src': ["'self'", 'data:'],
         'connect-src': ["'self'", 'wss:', 'ws:', ...backendOrigins],
         'worker-src': ["'self'", 'blob:'],
@@ -381,6 +381,7 @@ async function startServer() {
       setHeaders(res, file) {
         if (file.endsWith('sw.js') || file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
         else if (/[\\/]assets[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        else if (/[\\/]audio[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=604800');
         if (file.endsWith('.md')) res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
       },
     }));
