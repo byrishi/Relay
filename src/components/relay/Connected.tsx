@@ -52,6 +52,25 @@ function ApprovalBanner({ peer, relay }: { peer: Peer; relay: Relay }) {
   );
 }
 
+/** A number that glides to each new value instead of jumping. */
+function Eased({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const from = useRef(value);
+  useEffect(() => {
+    const a = from.current, t0 = performance.now(), ms = 450;
+    let raf = 0;
+    const step = (t: number) => {
+      const p = Math.min(1, (t - t0) / ms), v = a + (value - a) * (1 - Math.pow(1 - p, 3));
+      from.current = v;
+      if (ref.current) ref.current.textContent = v.toFixed(v < 10 ? 1 : 0);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <span ref={ref}>{value.toFixed(value < 10 ? 1 : 0)}</span>;
+}
+
 /** The link between the two devices. The stream runs as fast as the real transfer. */
 function LinkBand({ relay, peers }: { relay: Relay; peers: Peer[] }) {
   const speed = relay.totalSpeed;
@@ -66,7 +85,7 @@ function LinkBand({ relay, peers }: { relay: Relay; peers: Peer[] }) {
     <div className="px-6 md:px-10 pb-6 md:pb-8" aria-hidden="true">
       <div className="flex items-end justify-between gap-4">
         <span className="text-dev-fg-2 truncate">{relay.deviceName}</span>
-        {busy ? <span className="display text-[44px] md:text-[64px] leading-none tabular-nums shrink-0" style={{ ['--w' as string]: 3 }}>{whole}<span className="text-[18px] ml-1.5 text-dev-fg-2 font-sans">{frac}/s</span></span>
+        {busy ? <span className="display text-[44px] md:text-[64px] leading-none tabular-nums shrink-0" style={{ ['--w' as string]: 3 }}><Eased value={parseFloat(whole)} /><span className="text-[18px] ml-1.5 text-dev-fg-2 font-sans">{frac}/s</span></span>
           : <span className="text-dev-fg-2 shrink-0 hidden sm:inline">Ready for files</span>}
         <span className="text-dev-fg-2 truncate text-right">{other}</span>
       </div>
@@ -106,7 +125,7 @@ function Header({ relay }: { relay: Relay }) {
       <ul className="px-6 md:px-10 pb-8 flex flex-col sm:flex-row sm:flex-wrap gap-2" aria-label="Connected devices">
         {peers.map((p) => (
           <li key={p.clientId}>
-            <button onClick={() => setVerifyId(p.clientId)} data-cursor="Verify"
+            <button onClick={() => setVerifyId(p.clientId)}
               className={cn('w-full sm:w-auto min-h-11 pl-4 pr-1.5 py-1.5 rounded-full text-[15px] flex items-center gap-2.5 transition-colors text-left',
                 p.approved === undefined ? 'bg-warn-d/20 text-white' : 'bg-lcd text-dev-fg-2 hover:bg-dev-3')}>
               {isVerified(p) ? <BadgeCheck className="w-4 h-4 text-ok-d shrink-0" aria-hidden="true" /> : <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />}
@@ -426,7 +445,7 @@ export default function Connected({ relay }: { relay: Relay }) {
           <section aria-labelledby="send-title" className="rounded-[20px] bg-dev-2 p-5 md:p-6 flex flex-col">
             <h2 id="send-title" className="text-[17px] font-medium">Send</h2>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <button onClick={() => fileInput.current?.click()} className="key key-signal" data-cursor="Pick"><Plus className="w-4 h-4" aria-hidden="true" />Choose files</button>
+              <button onClick={() => fileInput.current?.click()} className="key key-signal"><Plus className="w-4 h-4" aria-hidden="true" />Choose files</button>
               <button onClick={() => folderInput.current?.click()} className="key key-dark pointer-coarse:hidden"><FolderUp className="w-4 h-4" aria-hidden="true" />Choose a folder</button>
             </div>
             <p className="text-[14.5px] text-dev-fg-2 mt-3 pointer-coarse:hidden">You can also drop files anywhere, or paste with Ctrl/⌘ V.</p>

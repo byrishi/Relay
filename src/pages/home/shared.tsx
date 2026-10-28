@@ -35,7 +35,7 @@ export function NearbyList({ relay, devices }: { relay: Relay; devices: NearbyDe
     <ul className="flex flex-col gap-1.5 mt-2" data-testid="nearby" aria-label="Nearby devices">
       {devices.map((d) => (
         <li key={d.id}>
-          <button onClick={() => relay.inviteNearby(d.id)} data-cursor="Connect"
+          <button onClick={() => relay.inviteNearby(d.id)}
             className="group w-full min-h-12 flex items-center gap-3 pl-3 pr-2 py-1.5 rounded-2xl bg-lcd hover:bg-dev-3 text-left transition-colors">
             <KindIcon kind={d.kind} className="w-4 h-4 text-dev-fg-2" />
             <span className="flex-1 min-w-0 text-[15.5px] text-white truncate">{d.name}</span>
@@ -79,15 +79,15 @@ export const AppWindow = forwardRef<HTMLInputElement, LandingProps & { className
       {heading}
       <div className="grid lg:grid-cols-[1.35fr_1fr] gap-3 p-3 md:p-4">
         {/* SEND */}
-        <section aria-labelledby="send-h" className="rounded-[20px] bg-dev-2 p-5 md:p-7 flex flex-col min-h-[300px] md:min-h-[360px]">
+        <section aria-labelledby="send-h" className="rounded-[20px] bg-dev-2 p-5 md:p-7 flex flex-col pointer-fine:min-h-[360px]">
           <h2 id="send-h" className="text-[17px] font-medium">Send</h2>
           <p className="text-dev-fg-2 mt-1 max-w-[40ch]">Files or whole folders, any size. You get a link and a QR code for the other device.</p>
-          <div onClick={() => fileInput.current?.click()} data-cursor="Pick" aria-hidden="true"
+          <div onClick={() => fileInput.current?.click()} data-cursor="Choose files" aria-hidden="true"
             className="hidden pointer-fine:flex mt-5 flex-1 min-h-[150px] rounded-2xl border-[1.5px] border-dashed border-white/35 hover:border-white/70 hover:bg-white/[0.04] transition-colors items-end p-5 cursor-pointer">
             <p className="display text-[44px] lg:text-[56px] leading-[.9]" style={{ ['--w' as string]: 3.4 }}>Drop files here</p>
           </div>
           <div className="mt-auto pt-6 flex flex-col sm:flex-row gap-3">
-            <button onClick={() => fileInput.current?.click()} className="key key-signal" data-cursor="Pick"><Plus className="w-5 h-5" aria-hidden="true" />Choose files</button>
+            <button onClick={() => fileInput.current?.click()} className="key key-signal"><Plus className="w-5 h-5" aria-hidden="true" />Choose files</button>
             <button onClick={() => folderInput.current?.click()} className="key key-dark pointer-coarse:hidden"><FolderUp className="w-5 h-5" aria-hidden="true" />Choose a folder</button>
           </div>
           <input ref={fileInput} type="file" multiple className="sr-only" tabIndex={-1} aria-hidden="true"

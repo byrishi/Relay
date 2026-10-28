@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Copy, Check, Lock, KeyRound, Share2, Link2, Plus } from 'lucide-react';
 import type { Relay } from '../../hooks/useRelay';
@@ -7,6 +7,26 @@ import { NearbyList, Staged, StagedList } from './shared';
 import { useMedia } from '../../lib/useMedia';
 
 const ease = [0.76, 0, 0.24, 1] as const;
+
+/** The new code resolves out of noise, letter by letter, as the room is made. */
+function Scramble({ text }: { text: string }) {
+  const [out, setOut] = useState(text);
+  useEffect(() => {
+    if (navigator.webdriver || window.matchMedia('(prefers-reduced-motion: reduce)').matches || !/\d/.test(text)) { setOut(text); return; }
+    const pool = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const t0 = performance.now(), ms = 700;
+    let raf = 0;
+    const step = (t: number) => {
+      const p = Math.min(1, (t - t0) / ms);
+      const fixed = Math.floor(p * text.length);
+      setOut(text.split('').map((c, i) => (i < fixed || c === '-' ? c : pool[(Math.random() * pool.length) | 0])).join(''));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [text]);
+  return <>{out}</>;
+}
 
 /** Waiting room: share the code or QR, optionally stage files, wait for the other device. */
 export default function Lobby({ relay, staged, onClearStaged, onStage }: { relay: Relay; staged: Staged; onClearStaged: () => void; onStage: (g: Staged) => void }) {
@@ -42,7 +62,7 @@ export default function Lobby({ relay, staged, onClearStaged, onStage }: { relay
           </div>
           <div className="rounded-[20px] bg-dev-2 p-5 md:p-7 flex flex-col min-w-0">
             <p className="text-dev-fg-2">Room code</p>
-            <p className="font-mono text-[26px] md:text-[34px] text-white mt-1 select-all break-all" data-testid="room-code" aria-live="polite">{relay.roomCode || 'creating…'}</p>
+            <p className="font-mono text-[26px] md:text-[34px] text-white mt-1 select-all break-all" data-testid="room-code" aria-live="polite"><Scramble text={relay.roomCode || 'creating…'} /></p>
             <div className="flex flex-col sm:flex-row gap-2.5 mt-6">
               {canShare
                 ? <button onClick={share} disabled={!ready} className="key key-signal"><Share2 className="w-5 h-5" aria-hidden="true" /> Share link</button>
