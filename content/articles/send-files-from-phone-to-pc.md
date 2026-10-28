@@ -13,7 +13,7 @@ related: send-files-from-iphone-to-android, share-files-on-same-wifi, airdrop-al
 
 ## Steps
 
-1. On the **computer**, open [relay.rishishah.in](/) in Chrome or Edge and click **Start Transfer**.
+1. On the **computer**, open [relay.rishishah.in](/) in Chrome or Edge and click **Start sending**.
 2. On the **phone**, scan the QR code with the camera. On the same Wi-Fi you can also tap the computer under **Nearby**.
 3. On the computer, click **Allow** for the phone.
 4. On the phone, tap the upload area and choose photos, videos or files.

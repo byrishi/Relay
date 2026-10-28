@@ -15,7 +15,7 @@ related: airdrop-alternative, send-files-from-phone-to-pc, send-large-video-file
 
 1. On **both phones**, open [relay.rishishah.in](/) (Safari on iPhone, Chrome on Android).
 2. **Same Wi-Fi?** Each phone appears under **Nearby** on the other. Tap it and accept the invitation.
-   **Different networks?** Tap **Start Transfer** on one phone and type the code (or scan the QR) on the other.
+   **Different networks?** Tap **Start sending** on one phone and type the code (or scan the QR) on the other.
 3. Allow the device, then tap the upload area and choose your photos, videos or files.
 4. On the receiving phone, tap **Accept**, then **Save** when it finishes.
 

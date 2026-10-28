@@ -1,5 +1,5 @@
 <p align="center">
-<img width="200" height="200" alt="Relay" src="https://github.com/user-attachments/assets/e4183387-1376-4148-95d5-6e14733b9982" />
+<img width="96" alt="Relay logo: an R drawn in horizontal lines" src="public/favicon.svg" />
 </p>
 
 <h1 align="center">Relay — free, open-source P2P file transfer</h1>
@@ -30,13 +30,13 @@
   <a href="https://peerlist.io/rishhishah/project/relay" target="_blank" rel="noreferrer"><img src="https://peerlist.io/api/v1/projects/embed/PRJH6A7EDKK7QNB9MI99JDGADGN7RN?showUpvote=true&theme=light" alt="Relay on Peerlist" height="60" /></a>
 </p>
 
-<p align="center"><img src="docs/screenshots/transfer.png" alt="Relay sending a file: two dotted R marks joined by a river of light, with live speed and progress" width="900"></p>
+<p align="center"><img src="docs/screenshots/transfer.webp" alt="Relay sending a file: live speed between two connected devices, with the transfer list below" width="900"></p>
 
 ## What is Relay?
 
 Relay is a web app that sends files **straight from one device to another** over an encrypted WebRTC connection. Nothing is uploaded to a server, so there is no file size limit, no account, and no copy left in the cloud. It runs in any modern browser on Windows, macOS, Linux, Android, iPhone and iPad.
 
-**How to use it:** open [relay.rishishah.in](https://relay.rishishah.in) on both devices → press **Start Transfer** and share the code (`amber-fox-123`) or QR, or tap the other device under **Nearby** → approve it → drop your files.
+**How to use it:** open [relay.rishishah.in](https://relay.rishishah.in) and drop your files (or press **Start sending**). Share the code (`amber-fox-123`) or scan the QR code on the other device, or tap it under **Nearby**. Approve it, and the files go straight across.
 
 ## Features
 
@@ -49,7 +49,8 @@ Relay is a web app that sends files **straight from one device to another** over
 - Several files queue and send one at a time, so they never corrupt each other
 
 **Connect**
-- Readable room codes, QR codes and invite links
+- Readable room codes, branded QR codes and invite links
+- Pick files first: they are sent as soon as you approve the other device
 - **Nearby devices** on the same network, no code needed
 - Optional room password
 - Connection badge: *Direct · Local network*, *Direct · Peer-to-peer* or *Relayed via TURN*
@@ -62,17 +63,17 @@ Relay is a web app that sends files **straight from one device to another** over
 
 **App**
 - Installable PWA with **Share to Relay** from the Android share sheet
-- A light-stream particle visual that reacts to live transfer speed (WebGL2)
+- While connected, both devices' marks are joined by a stream of light that follows live speed (WebGL2)
 - Self-hostable: one Node.js server or one Docker container
 
 <table>
 <tr>
-<td><img src="docs/screenshots/landing.png" alt="Relay home page"></td>
-<td><img src="docs/screenshots/approval.png" alt="Approving a device with its safety number"></td>
+<td><img src="docs/screenshots/landing.webp" alt="Relay home page"></td>
+<td><img src="docs/screenshots/approval.webp" alt="Approving a device with its safety number"></td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/lobby.png" alt="Room code and QR code"></td>
-<td align="center"><img src="docs/screenshots/mobile-incoming.png" alt="Accepting incoming files on a phone" width="300"></td>
+<td><img src="docs/screenshots/lobby.webp" alt="Room code and QR code"></td>
+<td align="center"><img src="docs/screenshots/mobile-incoming.webp" alt="Accepting incoming files on a phone" width="300"></td>
 </tr>
 </table>
 
@@ -130,7 +131,7 @@ Serve it over HTTPS (Caddy, Nginx or your platform), since browsers require a se
 ```bash
 npm install
 npm run dev        # http://localhost:3000 (Vite + signaling server)
-npm run lint       # TypeScript
+npm run typecheck  # TypeScript, no emit
 npm run build      # client + prerendered pages + server bundle
 ```
 
@@ -166,7 +167,7 @@ Old URLs redirect (301) through `content/redirects.json`.
 
 ## Contributing
 
-Issues and pull requests are welcome. Please report security issues privately (see [SECURITY.md](SECURITY.md)).
+Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately (see [SECURITY.md](SECURITY.md)). Release notes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

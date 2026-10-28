@@ -20,7 +20,7 @@ related: webrtc-file-transfer, send-files-from-phone-to-pc, send-files-from-ipho
 ## How to do it with Relay
 
 1. Open [relay.rishishah.in](/) on both devices.
-2. On one, press **Start Transfer**. On the other, type the code, scan the QR code, or tap the device under **Nearby** if you're on the same network.
+2. On one, press **Start sending**. On the other, type the code, scan the QR code, or tap the device under **Nearby** if you're on the same network.
 3. Approve the device, drop or paste your files, and the receiver accepts.
 
 ## What works in each browser
