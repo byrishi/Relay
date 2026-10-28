@@ -1,6 +1,6 @@
 {
   "name": "relay",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Peer-to-peer, end-to-end encrypted file transfer in the browser. No upload, no account, no size limit.",
   "license": "MIT",
   "homepage": "https://relay.rishishah.in",
