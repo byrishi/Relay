@@ -17,12 +17,13 @@ All notable changes to Relay are listed here. The format follows [Keep a Changel
 - Installable PWA with a share target.
 - Prerendered pages, 33 guides, `llms.txt` and a Markdown copy of every page.
 - Branded QR codes with the Relay mark.
+- Two designs, Dark and Light, with a switch in the header and a `?design=` link parameter.
 - Dockerfile, Render blueprint and CI.
 
 ### Changed
 
 - Transfer engine rewritten: speed and progress come from receiver acknowledgements, files are sent one at a time per device, and flow control respects the browser's buffers.
-- New dark interface, with the app shown in a window on the home page.
+- New interface with the app shown in a window on the home page, reworked for phones (larger touch targets, phone-first layouts for the waiting room, comparison and connected screens).
 - Logo redrawn in the brand gradient from the original line-drawn R.
 
 ### Security

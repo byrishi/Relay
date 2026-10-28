@@ -63,13 +63,18 @@ Relay is a web app that sends files **straight from one device to another** over
 
 **App**
 - Installable PWA with **Share to Relay** from the Android share sheet
+- Two designs, **Dark** and **Light**, with a switch in the header (or link straight to one with `?design=light`)
 - While connected, both devices' marks are joined by a stream of light that follows live speed (WebGL2)
 - Self-hostable: one Node.js server or one Docker container
 
 <table>
 <tr>
-<td><img src="docs/screenshots/landing.webp" alt="Relay home page"></td>
+<td><img src="docs/screenshots/landing.webp" alt="Relay home page, dark design"></td>
+<td><img src="docs/screenshots/landing-light.webp" alt="Relay home page, light design"></td>
+</tr>
+<tr>
 <td><img src="docs/screenshots/approval.webp" alt="Approving a device with its safety number"></td>
+<td><img src="docs/screenshots/transfer.webp" alt="A transfer in progress, with live speed"></td>
 </tr>
 <tr>
 <td><img src="docs/screenshots/lobby.webp" alt="Room code and QR code"></td>

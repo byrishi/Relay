@@ -74,9 +74,10 @@ void main() {
   float sLand = mix(1.0, 2.2, uWide);
   vec3 cLobby = vec3(0.0, 0.9, -5.8);
   float sLobby = mix(2.7, 3.8, uWide);
-  vec3 cA = vec3(-mix(1.2, max(3.8, uAspect * 3.3), uWide), mix(2.6, 1.3, uWide), -5.8);
+  // connected: the canvas is a band at the top of the view; the marks flank the speed readout
+  vec3 cA = vec3(-mix(2.75, uAspect * 3.3, uWide), 0.9, -5.8);
   vec3 cB = vec3(-cA.x, cA.y, cA.z);
-  float sConn = mix(0.8, 1.55, uWide);
+  float sConn = mix(1.1, 2.5, uWide);
 
   if (aKind < 0.5) {
     // ── meadow: dotted stems swaying in the wind, some crowned with blossoms
@@ -152,7 +153,7 @@ void main() {
     vec3 colMist = dawn(0.08 + aSeed.z * 0.3);
 
     float flowS = fract(aSeed.x + t * (0.04 + uEnergy * 0.5));
-    vec3 ctrl = vec3(0.0, max(cA.y, 0.0) + mix(2.0, 1.4, uWide) + uEnergy * 0.3, -6.4);
+    vec3 ctrl = vec3(0.0, cA.y + mix(1.3, 1.6, uWide) + uEnergy * 0.3, -6.4);
     vec3 river = bez(cA + vec3(0.0, 0.1, 0.0), ctrl, cB + vec3(0.0, 0.1, 0.0), flowS);
     float env = sin(flowS * 3.14159);
     float tube = (0.03 + 0.06 * (1.0 - uEnergy)) * env;
@@ -216,24 +217,30 @@ const COMPOSITE_FS = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 vUv;
 uniform sampler2D uScene, uGlow;
-uniform float uTime, uAspect, uEnergy, uPulse, uScroll;
+uniform float uTime, uAspect, uEnergy, uPulse, uScroll, uLight;
 uniform vec3 uMode;
 out vec4 o;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
-  // night background with a faint indigo haze up top
-  vec3 col = vec3(0.020, 0.027, 0.047);
   vec2 q = (vUv - vec2(0.5, 0.62)) * vec2(uAspect, 1.0);
-  col += vec3(0.07, 0.07, 0.20) * exp(-dot(q, q) * 2.2);
-
-  // coloured glow from the blurred dots
   vec4 g = texture(uGlow, vUv);
   vec3 gc = g.a > 0.0005 ? g.rgb / g.a : vec3(0.0);
   float ga = clamp(g.a * (1.2 + uPulse * 2.5 + uEnergy * uMode.z * 1.4), 0.0, 0.6);
-  col += gc * ga * 0.55;
-
   vec4 s = texture(uScene, vUv);
-  col = col * (1.0 - s.a) + s.rgb;
+  vec3 col;
+  if (uLight > 0.5) {
+    // white page: a soft lavender haze, tinted glow, dots laid over it
+    col = vec3(1.0);
+    col = mix(col, vec3(0.93, 0.93, 1.0), 0.6 * exp(-dot(q, q) * 2.2));
+    col = mix(col, gc, ga * 0.35);
+    col = col * (1.0 - s.a) + s.rgb * 0.9;
+  } else {
+    // night background with a faint indigo haze up top
+    col = vec3(0.020, 0.027, 0.047);
+    col += vec3(0.07, 0.07, 0.20) * exp(-dot(q, q) * 2.2);
+    col += gc * ga * 0.55;
+    col = col * (1.0 - s.a) + s.rgb;
+  }
   col += (hash(vUv * 1000.0 + fract(uTime) * 100.0) - 0.5) * 0.012;
   o = vec4(col, 1.0);
 }`;
@@ -353,11 +360,14 @@ export default function Atmosphere() {
     let W = 0, H = 0;
     let scene: Target | undefined, bloomA: Target | undefined, bloomB: Target | undefined;
     let dirty = true;
+    let scaleNow = 1;
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.75);
       const scale = dpr * (mobile ? 0.8 : 0.9);
-      const w = Math.max(2, Math.floor(window.innerWidth * scale));
-      const h = Math.max(2, Math.floor(window.innerHeight * scale));
+      scaleNow = scale;
+      // sized to its container (the band at the top of the connected view)
+      const w = Math.max(2, Math.floor(canvas.clientWidth * scale));
+      const h = Math.max(2, Math.floor(canvas.clientHeight * scale));
       dirty = true;
       if (w === W && h === H) return;
       W = w; H = h;
@@ -368,7 +378,8 @@ export default function Atmosphere() {
       bloomB = makeTarget(Math.max(2, W >> 2), Math.max(2, H >> 2));
     };
     resize();
-    window.addEventListener('resize', resize);
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
 
     const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
     const onMove = (e: PointerEvent) => {
@@ -421,7 +432,7 @@ export default function Atmosphere() {
       gl.useProgram(points.p);
       gl.uniform1f(points.u.uTime, time);
       gl.uniform1f(points.u.uAspect, aspect);
-      gl.uniform1f(points.u.uPixel, H / 900 * 3.0);
+      gl.uniform1f(points.u.uPixel, Math.max(H, 760 * scaleNow) / 900 * 3.0);
       gl.uniform1f(points.u.uEnergy, energy);
       gl.uniform1f(points.u.uScroll, scroll);
       gl.uniform1f(points.u.uWide, wide);
@@ -462,6 +473,7 @@ export default function Atmosphere() {
       gl.uniform1f(comp.u.uPulse, pulse);
       gl.uniform1f(comp.u.uScroll, scroll);
       gl.uniform3f(comp.u.uMode, mode.x, mode.y, mode.z);
+      gl.uniform1f(comp.u.uLight, document.documentElement.dataset.design === 'light' ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.activeTexture(gl.TEXTURE0);
     };
@@ -474,7 +486,7 @@ export default function Atmosphere() {
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('scroll', onScroll);
       canvas.removeEventListener('webglcontextlost', onLost);
@@ -486,8 +498,8 @@ export default function Atmosphere() {
     <canvas
       ref={ref}
       aria-hidden="true"
-      className="fixed inset-0 w-full h-full z-0 pointer-events-none"
-      style={{ background: '#05070C' }}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ background: 'var(--color-bg)' }}
     />
   );
 }

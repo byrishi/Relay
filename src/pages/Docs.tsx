@@ -44,7 +44,7 @@ export function NotFound() {
   return (
     <div className="w-full max-w-xl mx-auto px-6 py-32 text-center">
       <p className="text-[14px] font-medium text-acc">404</p>
-      <h1 className="mt-3 text-[40px] md:text-[52px] font-semibold tracking-[-0.045em] leading-[1.05]">This page isn't here.</h1>
+      <h1 className="mt-3 text-[40px] md:text-[52px] font-semibold tracking-[var(--tr-1)] leading-[1.05]">This page isn't here.</h1>
       <p className="text-fg-2 text-[17px] mt-4">The link may be old. Try the guides, or start a transfer.</p>
       <div className="flex gap-3 justify-center mt-9">
         <Link to="/" className="btn btn-w btn-lg">Start sending</Link>
