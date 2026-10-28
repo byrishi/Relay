@@ -6,6 +6,12 @@ All notable changes to Relay are listed here. The format follows [Keep a Changel
 
 ### Added
 
+- Entry screen on the home page: the mark assembles, and visitors enter with sound on (the default) or off. Skipped for room links, guides and crawlers.
+- A shared soundtrack player: the Sound key in the header, a one-time invitation on guide pages, and lock-screen controls.
+- Eleven new guides: best free file transfer sites, file size limits, emailing large files, large WhatsApp videos, SHAREit and Xender alternatives, Quick Share alternatives, Mac and Windows, two computers, sending without signing up, whether WeTransfer is safe, and a glossary.
+- Brand kit at /brand with logo, mark and app icon downloads, colours, type, usage and an approved description.
+- A link preview image for every page, a favicon set that survives round crops in search results, richer structured data, an "On this page" list on long guides, IndexNow submission after deploys, and optional search-console verification tags.
+
 - Optional soundtrack, “Relay — Straight” and “Relay — Across” by Thepla Theorist and Rishi Shah, behind a Sound key in the header. Off by default, nothing downloads until it is turned on, and it streams from jsDelivr so it does not use the host's bandwidth.
 - Room codes and device names made from Sanskrit words found in the Vedas, Upanishads and the Gita.
 
@@ -15,7 +21,7 @@ All notable changes to Relay are listed here. The format follows [Keep a Changel
 - New pixel R logo, favicon, app icons and link preview.
 - QR codes redrawn in the same pixel language; they still use error correction level H.
 - Guides and content pages rebuilt on the same grid with a metadata column.
-- A viewfinder cursor on mouse and trackpad, one transition between pages, and smooth scrolling, all off when the system asks for reduced motion.
+- A cursor for mouse and trackpad that wraps buttons and links in their own shape, plus headline reveals, smooth FAQ answers, and smooth scrolling, all off when the system asks for reduced motion.
 
 ### Removed
 
