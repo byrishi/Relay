@@ -1,0 +1,14 @@
+# One-click deploy on Render (Blueprint). Free instances sleep after 15 minutes idle.
+services:
+  - type: web
+    name: relay
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
