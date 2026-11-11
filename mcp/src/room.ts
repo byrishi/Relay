@@ -61,6 +61,8 @@ export class RelayRoom {
   safety = '';
   route?: RouteInfo;
   items: Item[] = [];
+  /** When the other device joined (ms), for 'taking too long' hints. */
+  joinedAt = 0;
 
   private socket?: Socket;
   private ice: RTCIceServer[] = [];
@@ -81,6 +83,8 @@ export class RelayRoom {
 
   get link() { return this.code ? `${this.server}/?code=${encodeURIComponent(this.code)}` : ''; }
   get connected() { return this.state === 'connected'; }
+  /** Whether the signaling socket is connected. */
+  get online() { return !!this.socket?.connected; }
 
   /** Opens the room. Resolves with the room code. */
   start(timeoutMs = 20_000): Promise<string> {
@@ -112,6 +116,7 @@ export class RelayRoom {
       if (this.peer && this.peer.socketId !== peerId && this.manager && !this.manager.isOpen) this.dropManager();
       this.peer = { clientId, socketId: peerId, name: String(peerDeviceName || 'Device'), session };
       this.peerName = this.peer.name;
+      if (!this.joinedAt) this.joinedAt = Date.now();
       this.set('connecting');
       if (!this.manager && this.iAmInitiator()) this.createManager(true);
     });
@@ -123,6 +128,7 @@ export class RelayRoom {
       this.peer = undefined;
       this.peerName = '';
       this.safety = '';
+      this.joinedAt = 0;
       this.set('waiting');
     });
 
@@ -245,7 +251,14 @@ export class RelayRoom {
       if (u.blob) it.blob = u.blob;
       this.notify();
     };
-    m.init(initiator);
+    try {
+      m.init(initiator);
+    } catch (e: any) {
+      // e.g. an embedding page that disables WebRTC
+      this.error = `Direct connections are blocked here (${e?.message || 'WebRTC unavailable'})`;
+      this.manager = undefined;
+      this.set('error');
+    }
     return m;
   }
 

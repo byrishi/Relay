@@ -47,6 +47,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .btn:disabled{opacity:.5;cursor:default}
 footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .note{font-size:12px;color:var(--sub)}
+#joining{background:var(--soft);border-radius:16px;padding:14px}
+#joining h2{margin:0 0 4px;font-size:16px;font-weight:600}
+#diag{font-size:12px;color:var(--sub)}#diag summary{cursor:pointer}
+#diag pre{margin:8px 0 0;white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;line-height:1.5;color:var(--ink);background:var(--soft);border-radius:10px;padding:10px}
 #empty{font-size:13px;color:var(--sub);text-align:center;padding:6px 0}
 @media (max-width:420px){#join{flex-direction:column;align-items:flex-start}#qr{width:120px;height:120px}}
 </style>
@@ -66,9 +70,17 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:10px;fl
       <div class="hint">Files go straight between this device and your phone. Nothing is uploaded.</div>
     </div>
   </section>
+  <section id="joining" hidden>
+    <div class="join-text">
+      <h2 id="joining-title"></h2>
+      <div class="hint" id="joining-hint"></div>
+      <div><button class="btn" id="joining-open" type="button" hidden>Open Relay in a browser</button></div>
+    </div>
+  </section>
   <section id="peer" hidden><span>Connected to <b id="peer-name"></b></span><span>Safety number <span id="safety"></span></span><span id="route"></span></section>
   <section id="items" aria-live="polite"></section>
   <div id="empty" hidden>Send something from your phone, or add files from this device.</div>
+  <details id="diag"><summary>Connection details</summary><pre id="diag-body"></pre></details>
   <footer>
     <span class="note">End-to-end encrypted · peer to peer</span>
     <span class="actions"><button class="btn" id="add" type="button">Add files</button><button class="btn ghost" id="close" type="button">Close</button></span>

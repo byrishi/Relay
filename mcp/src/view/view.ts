@@ -21,6 +21,40 @@ const el = (tag: string, cls?: string, text?: string) => {
   return e;
 };
 
+// ── connection diagnostics ──────────────────────────────────────────────────
+// Wraps RTCPeerConnection to count ICE candidates and track states, so the panel can say
+// exactly where a connection stalls (shown under "Connection details").
+const diag = {
+  webrtc: typeof (globalThis as any).RTCPeerConnection === 'function' ? 'available' : 'missing',
+  error: '',
+  local: {} as Record<string, number>,
+  remote: 0,
+  gathering: '',
+  ice: '',
+  conn: '',
+};
+const NativePC = (globalThis as any).RTCPeerConnection;
+if (NativePC) {
+  class TrackedPC extends NativePC {
+    constructor(cfg?: RTCConfiguration) {
+      try { super(cfg); } catch (e: any) { diag.error = e?.message || String(e); schedule(); throw e; }
+      const pc = this as unknown as RTCPeerConnection;
+      pc.addEventListener('icecandidate', (e: any) => {
+        const t = / typ (\w+)/.exec(e.candidate?.candidate || '')?.[1];
+        if (t) diag.local[t] = (diag.local[t] || 0) + 1;
+        schedule();
+      });
+      pc.addEventListener('icegatheringstatechange', () => { diag.gathering = pc.iceGatheringState; schedule(); });
+      pc.addEventListener('iceconnectionstatechange', () => { diag.ice = pc.iceConnectionState; schedule(); });
+      pc.addEventListener('connectionstatechange', () => { diag.conn = pc.connectionState; schedule(); });
+    }
+    addIceCandidate(...args: any[]) { diag.remote++; schedule(); return (super.addIceCandidate as any)(...args); }
+  }
+  (globalThis as any).RTCPeerConnection = TrackedPC;
+}
+const SLOW_MS = 12_000;
+setInterval(() => { if (room.state === 'connecting') schedule(); }, 2000);
+
 const app = new App({ name: 'Relay', version: '0.2.0' }, {}, { autoResize: true });
 const room = new RelayRoom({ server: SERVER, deviceName: 'Relay in chat', acceptIncoming: true, onChange: () => schedule() });
 const added = new Set<string>(); // received items already added to the chat
@@ -107,12 +141,14 @@ function pickFiles() {
 }
 
 // ── render ───────────────────────────────────────────────────────────────────
+const slow = () => room.state === 'connecting' && room.joinedAt > 0 && Date.now() - room.joinedAt > SLOW_MS;
+
 function statusText() {
   if (fatal) return fatal;
   switch (room.state) {
     case 'starting': return 'Opening a room…';
     case 'waiting': return 'Waiting for your phone';
-    case 'connecting': return `${room.peerName} joined · connecting`;
+    case 'connecting': return slow() ? 'Can\'t connect directly' : `${room.peerName} joined · connecting`;
     case 'connected': return `Connected to ${room.peerName}`;
     case 'stopped': return 'Closed';
     case 'error': return room.error || 'Something went wrong';
@@ -138,8 +174,27 @@ function itemLabel(it: Item) {
 async function render() {
   $('#status').textContent = statusText();
   $('#status').dataset.state = fatal ? 'error' : room.state;
-  const waiting = !room.connected && room.state !== 'stopped';
-  $('#join').hidden = !waiting || !room.code;
+  $('#join').hidden = room.state !== 'waiting' || !room.code;
+  $('#joining').hidden = room.state !== 'connecting';
+  if (room.state === 'connecting') {
+    $('#joining-title').textContent = slow() ? `${room.peerName} joined, but a direct connection didn't form` : `${room.peerName} joined. Connecting…`;
+    $('#joining-hint').textContent = slow()
+      ? (diag.webrtc !== 'available' || diag.error
+        ? 'This chat app blocks direct connections. Open Relay in a browser tab instead.'
+        : 'Check that both devices are online. Some networks block direct connections. Open “Connection details” below and share them if it keeps failing.')
+      : 'Setting up an encrypted, direct connection.';
+    $('#joining-open').hidden = !slow();
+    if (slow()) ($('#diag') as HTMLDetailsElement).open = true;
+  }
+  const L = diag.local;
+  $('#diag-body').textContent = [
+    `Signaling: ${room.online ? 'connected' : 'not connected'} (${room.server.replace(/^https?:\/\//, '')})`,
+    `Room: ${room.code || '—'} · state ${room.state}${room.error ? ` · ${room.error}` : ''}`,
+    `Other device: ${room.peerName || 'not joined'}`,
+    `WebRTC: ${diag.webrtc}${diag.error ? ` · error: ${diag.error}` : ''}`,
+    `Candidates here: host ${L.host || 0} · srflx ${L.srflx || 0} · relay ${L.relay || 0}${L.prflx ? ` · prflx ${L.prflx}` : ''} · from other device: ${diag.remote}`,
+    `ICE: gathering ${diag.gathering || '—'} · ${diag.ice || '—'} · connection ${diag.conn || '—'}`,
+  ].join('\n');
   $('#peer').hidden = !room.connected;
 
   if (room.code && qrFor !== room.link) {
@@ -193,6 +248,7 @@ async function render() {
 }
 
 $('#add').onclick = pickFiles;
+$('#joining-open').onclick = () => { if (room.link) app.openLink({ url: room.server }).catch(() => window.open(room.server, '_blank')); };
 $('#close').onclick = () => { room.stop(); render(); };
 render();
 
