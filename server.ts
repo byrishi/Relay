@@ -123,6 +123,8 @@ async function startServer() {
 
   // Short-lived TURN credentials (coturn "use-auth-secret"), so no static secret ships to browsers.
   app.get('/api/turn', (_req, res) => {
+    // Readable cross-origin: Relay embedded in other apps (e.g. an MCP App frame, origin "null") needs it too.
+    res.set('Access-Control-Allow-Origin', '*');
     const secret = process.env.TURN_SECRET;
     const urls = process.env.TURN_URLS?.split(',').map((s) => s.trim()).filter(Boolean);
     if (!secret || !urls?.length) return res.json({ iceServers: [] });

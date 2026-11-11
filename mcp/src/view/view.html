@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relay</title>
+<style>
+:root{--bg:#FFFFFF;--ink:#0E1233;--sub:#575C80;--line:#E3E5EE;--soft:#F2F3F7;--blue:#1631E0;--blue-ink:#FFFFFF;--green:#12B76A;--red:#C4320A;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B0D1C;--ink:#EEF0FA;--sub:#A3A8C2;--line:#262A44;--soft:#141831;--blue:#3D57FF;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B0D1C;--ink:#EEF0FA;--sub:#A3A8C2;--line:#262A44;--soft:#141831;--blue:#3D57FF;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:640px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:-.01em}
+.mark{display:grid;grid-template-columns:repeat(6,3px);grid-template-rows:repeat(7,3px);gap:1px}
+.mark i{background:var(--blue)}.mark i.a{background:#8FA0FF}
+#status{font-size:12.5px;color:var(--sub);background:var(--soft);border-radius:99px;padding:5px 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
+#status[data-state="connected"]{color:#fff;background:var(--green)}
+#status[data-state="error"]{color:#fff;background:var(--red)}
+#join{display:flex;gap:18px;align-items:center;background:var(--soft);border-radius:16px;padding:14px}
+#qr{width:140px;height:140px;border-radius:10px;background:#fff;flex-shrink:0;image-rendering:pixelated}
+.join-text{display:flex;flex-direction:column;gap:6px;min-width:0}
+.join-text h2{margin:0;font-size:17px;font-weight:600}
+#code{font-family:var(--mono);font-size:19px;letter-spacing:.02em;color:var(--blue);word-break:break-all}
+.hint{font-size:12.5px;color:var(--sub)}
+#peer{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;font-size:12.5px;color:var(--sub)}
+#peer b{color:var(--ink);font-weight:600}
+#safety{font-family:var(--mono);color:var(--ink);letter-spacing:.04em}
+#items{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.dir{width:28px;height:28px;border-radius:8px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue);flex-shrink:0}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.top{display:flex;justify-content:space-between;gap:8px}
+.name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.size{color:var(--sub);font-size:12.5px;white-space:nowrap}
+.bar{height:4px;border-radius:2px;background:var(--soft);overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);transition:width .2s}
+.completed .bar i{background:var(--green)}.failed .bar i,.declined .bar i{background:var(--red)}
+.label{font-size:12px;color:var(--sub)}
+.actions{display:flex;gap:6px;flex-shrink:0}
+.btn{font:inherit;font-size:13px;font-weight:500;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 14px;cursor:pointer;min-height:34px}
+.btn:hover{border-color:var(--sub)}.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
+.btn.ghost{border-color:transparent;color:var(--sub)}
+.btn:disabled{opacity:.5;cursor:default}
+footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--sub)}
+#empty{font-size:13px;color:var(--sub);text-align:center;padding:6px 0}
+@media (max-width:420px){#join{flex-direction:column;align-items:flex-start}#qr{width:120px;height:120px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="mark" aria-hidden="true"><i style="grid-area:1/1"></i><i style="grid-area:1/2"></i><i style="grid-area:1/3"></i><i style="grid-area:1/4"></i><i class="a" style="grid-area:1/6"></i><i style="grid-area:2/1"></i><i style="grid-area:2/5"></i><i style="grid-area:3/1"></i><i style="grid-area:3/5"></i><i style="grid-area:4/1"></i><i style="grid-area:4/2"></i><i style="grid-area:4/3"></i><i style="grid-area:4/4"></i><i style="grid-area:5/1"></i><i style="grid-area:5/3"></i><i style="grid-area:6/1"></i><i style="grid-area:6/4"></i><i style="grid-area:7/1"></i><i style="grid-area:7/5"></i></span>Relay</div>
+    <span id="status" role="status">Opening a room…</span>
+  </header>
+  <section id="join" hidden>
+    <img id="qr" alt="QR code to join from your phone">
+    <div class="join-text">
+      <h2>Scan with your phone</h2>
+      <div class="hint">Or open <span id="host">relay.rishishah.in</span> and enter</div>
+      <div id="code"></div>
+      <div class="hint">Files go straight between this device and your phone. Nothing is uploaded.</div>
+    </div>
+  </section>
+  <section id="peer" hidden><span>Connected to <b id="peer-name"></b></span><span>Safety number <span id="safety"></span></span><span id="route"></span></section>
+  <section id="items" aria-live="polite"></section>
+  <div id="empty" hidden>Send something from your phone, or add files from this device.</div>
+  <footer>
+    <span class="note">End-to-end encrypted · peer to peer</span>
+    <span class="actions"><button class="btn" id="add" type="button">Add files</button><button class="btn ghost" id="close" type="button">Close</button></span>
+  </footer>
+</div>
+<script>/*__RELAY_CONFIG__*/</script>
+<script>/*__VIEW_JS__*/</script>
+</body>
+</html>

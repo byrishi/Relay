@@ -6,6 +6,8 @@ All notable changes to Relay are listed here. The format follows [Keep a Changel
 
 ### Added
 
+- `mcp/` in-chat app: `open_relay` opens Relay inside the chat in MCP Apps hosts (Claude, ChatGPT, VS Code). Files move both ways between the chat and a phone; `relay-mcp-http` serves it as a hosted connector.
+- `/api/turn` is readable cross-origin, so embedded clients (an MCP App frame has origin `null`) get TURN servers too.
 - `mcp/`: an MCP server and a `relay-send` CLI. An AI agent or a terminal can send files from the computer straight to a phone or any browser, using the same transfer engine and protocol as the web app. Tools: `send_files`, `transfer_status`, `stop_sharing`.
 
 ## [2.0.0]
