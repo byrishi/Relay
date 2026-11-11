@@ -83,7 +83,14 @@ interface Room {
   members: Map<string, Member>; // socketId -> member
   createdAt: number;
   password?: { salt: Buffer; hash: Buffer };
+  /** Devices that dropped off without leaving; they may come back to the same room. */
+  away?: Set<string>;
+  /** When the room last became empty because a device dropped off. */
+  emptySince?: number;
 }
+
+/** An empty room is kept this long after its last device drops off, so it can reconnect. */
+const EMPTY_ROOM_GRACE_MS = 5 * 60_000;
 
 async function startServer() {
   const app = express();
@@ -172,6 +179,7 @@ async function startServer() {
   setInterval(() => {
     const now = Date.now();
     for (const [code, room] of rooms) {
+      if (!room.members.size && room.emptySince && now - room.emptySince > EMPTY_ROOM_GRACE_MS) { rooms.delete(code); continue; }
       if (now - room.createdAt > 24 * 3600_000) {
         io.to(code).emit('room_error', { code: 'EXPIRED', message: 'Room has expired.' });
         io.in(code).socketsLeave(code);
@@ -179,7 +187,7 @@ async function startServer() {
         rooms.delete(code);
       }
     }
-  }, 10 * 60_000).unref();
+  }, 60_000).unref();
 
   const broadcastNearby = (group: string) => {
     const members = nearby.get(group);
@@ -218,8 +226,12 @@ async function startServer() {
       if (!room) return;
       room.members.delete(socket.id);
       socket.to(code).emit('peer_left', { peerId: socket.id, clientId, explicit });
-      if (!room.members.size) rooms.delete(code);
-      else if (room.hostId === socket.id) room.hostId = room.members.keys().next().value!;
+      if (!explicit && clientId) (room.away ||= new Set()).add(clientId);
+      if (!room.members.size) {
+        // A dropped connection (sleep, network blip, a reloaded embed) keeps the room for a while.
+        if (explicit) rooms.delete(code);
+        else room.emptySince = Date.now();
+      } else if (room.hostId === socket.id) room.hostId = room.members.keys().next().value!;
     };
 
     const enter = (code: string, room: Room, name: string, session?: string) => {
@@ -232,6 +244,8 @@ async function startServer() {
         }
       }
       room.members.set(socket.id, { clientId, name, session });
+      room.emptySince = undefined;
+      room.away?.delete(clientId);
       socketRoom.set(socket.id, code);
       socket.join(code);
     };
@@ -273,7 +287,7 @@ async function startServer() {
         socket.emit('room_error', { code: 'NOT_FOUND', message: 'Invalid room code.' });
         return;
       }
-      const isRejoin = [...room.members.values()].some((m) => m.clientId === clientId);
+      const isRejoin = [...room.members.values()].some((m) => m.clientId === clientId) || !!room.away?.has(clientId);
       if (room.password && !isRejoin) {
         const pw = typeof d.password === 'string' ? d.password : '';
         if (!pw) {

@@ -146,6 +146,17 @@ export class RelayRoom {
     });
 
     s.on('room_error', ({ code, message }: { code: string; message: string }) => {
+      // Our room is gone (e.g. the server restarted). Open a new one so the QR code stays valid.
+      if (code === 'NOT_FOUND' && this.code && !this.manager?.isOpen) {
+        this.code = '';
+        this.dropManager();
+        this.peer = undefined;
+        this.peerName = '';
+        this.joinedAt = 0;
+        this.set('starting');
+        s.emit('create_room', { deviceName: this.deviceName, session: this.pageSession });
+        return;
+      }
       this.error = message || code;
       if (!this.code || code === 'EXPIRED') this.set('error');
     });
