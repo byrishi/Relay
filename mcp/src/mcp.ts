@@ -4,9 +4,11 @@
  */
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { buildServer, VERSION } from './server';
+import { registerLocalTools } from './local';
 
 async function main() {
-  const server = await buildServer({ mode: 'local' });
+  const server = await buildServer();
+  registerLocalTools(server);
   await server.connect(new StdioServerTransport());
   console.error(`relay-mcp ${VERSION} ready (server: ${process.env.RELAY_URL || 'https://relay.rishishah.in'})`);
 }

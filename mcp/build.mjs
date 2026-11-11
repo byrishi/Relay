@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir, chmod } from 'node:fs/promises';
 await mkdir('dist', { recursive: true });
 
 await build({
-  entryPoints: ['src/mcp.ts', 'src/cli.ts', 'src/http.ts'],
+  entryPoints: ['src/mcp.ts', 'src/cli.ts', 'src/http.ts', 'src/connector.ts'],
   bundle: true, platform: 'node', format: 'esm', target: 'node20',
   packages: 'external', outdir: 'dist', splitting: true, chunkNames: 'chunks/[name]-[hash]',
   banner: { js: '#!/usr/bin/env node' },

@@ -22,7 +22,7 @@ const el = (tag: string, cls?: string, text?: string) => {
 };
 
 const app = new App({ name: 'Relay', version: '0.2.0' }, {}, { autoResize: true });
-const room = new RelayRoom({ server: SERVER, deviceName: 'Claude chat', acceptIncoming: true, onChange: () => schedule() });
+const room = new RelayRoom({ server: SERVER, deviceName: 'Relay in chat', acceptIncoming: true, onChange: () => schedule() });
 const added = new Set<string>(); // received items already added to the chat
 let qrFor = '';
 let renderQueued = false;
@@ -31,7 +31,8 @@ let fatal = '';
 function schedule() {
   if (renderQueued) return;
   renderQueued = true;
-  requestAnimationFrame(() => { renderQueued = false; render(); });
+  // a timer, not requestAnimationFrame: rAF pauses in background tabs and off-screen frames
+  setTimeout(() => { renderQueued = false; render(); }, 60);
 }
 
 // ── tool input: files Claude wants to hand over ─────────────────────────────

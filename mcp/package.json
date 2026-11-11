@@ -41,5 +41,9 @@
     "@types/qrcode": "^1.5.5",
     "esbuild": "^0.25.0",
     "typescript": "~5.8.2"
+  },
+  "exports": {
+    "./connector": "./dist/connector.js",
+    "./package.json": "./package.json"
   }
 }

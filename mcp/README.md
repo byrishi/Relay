@@ -50,6 +50,13 @@ For Claude on the web and on your phone, run the connector somewhere public and 
 PORT=8787 npx -y -p @byrishi/relay-mcp relay-mcp-http      # serves POST /mcp
 ```
 
+Or mount it on an existing Express server (this is how relay.rishishah.in serves `/mcp`):
+
+```ts
+import { mountRelayConnector } from '@byrishi/relay-mcp/connector';
+mountRelayConnector(app, { path: '/mcp', relayServer: 'https://relay.example.com' });
+```
+
 Then in Claude: **Settings → Connectors → Add custom connector**, URL `https://your-host/mcp`. Ask Claude to "open Relay" or "send this to my phone".
 
 The connector only exposes `open_relay`. The panel runs on the user's own device inside the chat's sandboxed frame and talks to the Relay server directly, so the connector never sees a file. It declares the Relay server as its only network destination (`connectDomains`). Files Claude passes in `files` must be text and under 2 MB in total; larger files belong to `send_files` on a local install.
@@ -106,5 +113,6 @@ node dist/cli.js ./some-file --server http://localhost:3000
 
 - `src/room.ts`: one room with one other device, sending and receiving, in Node or the browser. It reuses the transfer engine (`../src/lib/webrtc.ts`) unchanged.
 - `src/session.ts`: the Node side (reads files from disk; [node-datachannel](https://github.com/murat-dogan/node-datachannel) provides `RTCPeerConnection`).
-- `src/server.ts`: the MCP tools and the app resource; `src/mcp.ts` (stdio) and `src/http.ts` (Streamable HTTP) are the entry points.
+- `src/server.ts`: the in-chat app (`open_relay` and its resource); `src/local.ts`: the tools that read local files.
+- `src/mcp.ts` (stdio), `src/http.ts` (standalone HTTP) and `src/connector.ts` (mount on Express) are the entry points.
 - `src/view/`: the in-chat panel, bundled into one HTML file.

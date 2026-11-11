@@ -11,7 +11,8 @@
 import { io, type Socket } from 'socket.io-client';
 import { WebRTCManager, loadIceServers, type SignalData, type TransferUpdate, type RouteInfo } from '../../src/lib/webrtc';
 
-export const PUBLIC_SERVER = 'https://relay.rishishah.in';
+import { PUBLIC_SERVER } from './util';
+export { PUBLIC_SERVER, fmtBytes } from './util';
 
 export type ItemStatus = TransferUpdate['status'] | 'waiting';
 export interface Item {
@@ -107,6 +108,8 @@ export class RelayRoom {
       // One device per room: the first one to join with the code.
       if (this.peer && this.peer.clientId !== clientId) return;
       if (this.peer && session && this.peer.session && this.peer.session !== session) this.dropManager(); // reloaded
+      // Same device on a new socket before we connected: our offer went to the old socket. Start over.
+      if (this.peer && this.peer.socketId !== peerId && this.manager && !this.manager.isOpen) this.dropManager();
       this.peer = { clientId, socketId: peerId, name: String(peerDeviceName || 'Device'), session };
       this.peerName = this.peer.name;
       this.set('connecting');
@@ -257,12 +260,4 @@ export class RelayRoom {
     w.forEach((fn) => fn());
     this.onChange?.(this);
   }
-}
-
-export function fmtBytes(n: number) {
-  if (n < 1024) return `${n} B`;
-  const u = ['KB', 'MB', 'GB', 'TB'];
-  let i = -1;
-  do { n /= 1024; i++; } while (n >= 1024 && i < u.length - 1);
-  return `${n.toFixed(n >= 100 ? 0 : 1)} ${u[i]}`;
 }
