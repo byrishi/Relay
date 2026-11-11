@@ -1,0 +1,32 @@
+{
+  "name": "@byrishi/relay-mcp",
+  "version": "0.1.0",
+  "description": "Send files from your machine (or your AI agent) straight to a phone or any browser, peer to peer. MCP server and CLI for Relay.",
+  "license": "Apache-2.0",
+  "homepage": "https://relay.rishishah.in",
+  "repository": { "type": "git", "url": "https://github.com/byrishi/relay.git", "directory": "mcp" },
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "bin": {
+    "relay-mcp": "dist/mcp.js",
+    "relay-send": "dist/cli.js"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "esbuild src/mcp.ts src/cli.ts --bundle --platform=node --format=esm --target=node20 --packages=external --outdir=dist --banner:js=\"#!/usr/bin/env node\"",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "node-datachannel": "^0.33.6",
+    "qrcode": "^1.5.4",
+    "socket.io-client": "^4.8.3",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/qrcode": "^1.5.5",
+    "esbuild": "^0.25.0",
+    "typescript": "~5.8.2"
+  }
+}

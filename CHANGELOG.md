@@ -2,6 +2,12 @@
 
 All notable changes to Relay are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `mcp/`: an MCP server and a `relay-send` CLI. An AI agent or a terminal can send files from the computer straight to a phone or any browser, using the same transfer engine and protocol as the web app. Tools: `send_files`, `transfer_status`, `stop_sharing`.
+
 ## [2.0.0]
 
 ### Changed

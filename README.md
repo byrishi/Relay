@@ -57,6 +57,15 @@ Most networks connect directly. Some offices, universities and mobile carriers b
 
 `useRelay()` returns the whole session as plain state and methods: `createRoom`, `joinRoom`, `approvePeer`, `sendFiles`, `respondToOffer`, `manageTransfer`, plus `peers`, `offers` and `transfers`. `src/client/App.tsx` is a complete example in about 200 lines.
 
+## Send from an AI agent or the terminal
+
+[`mcp/`](mcp) is an MCP server and a CLI built on the same engine. An agent such as Claude can send a file from your computer straight to your phone: it returns a link and a QR code, you open it on the phone and accept.
+
+```sh
+claude mcp add relay -- npx -y @byrishi/relay-mcp       # Claude Code
+npx -y -p @byrishi/relay-mcp relay-send ./report.pdf    # terminal
+```
+
 ## Project layout
 
 ```
@@ -65,6 +74,7 @@ src/lib/webrtc.ts        transfer engine: offers, flow control, resume, safety n
 src/lib/sinks.ts         where received bytes go (disk, folder, browser storage) and the ZIP builder
 src/hooks/useRelay.ts    session logic: rooms, peers, approvals, nearby devices
 src/client/              reference client
+mcp/                     MCP server and CLI (Node) for agents and terminals
 ```
 
 ## Limitations
