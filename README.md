@@ -62,6 +62,7 @@ Most networks connect directly. Some offices, universities and mobile carriers b
 [`mcp/`](mcp) is an MCP server and a CLI built on the same engine. An agent such as Claude can send a file from your computer straight to your phone: it returns a link and a QR code, you open it on the phone and accept.
 
 ```sh
+https://relay.rishishah.in/mcp                           # Claude (custom connector, opens Relay in the chat)
 claude mcp add relay -- npx -y @byrishi/relay-mcp       # Claude Code
 npx -y -p @byrishi/relay-mcp relay-send ./report.pdf    # terminal
 ```

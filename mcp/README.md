@@ -44,7 +44,9 @@ It runs on your computer, so it can read the files you point it at. It needs Nod
 
 ## Inside the chat (hosted connector)
 
-For Claude on the web and on your phone, run the connector somewhere public and add it as a custom connector:
+The public connector is live at **`https://relay.rishishah.in/mcp`**. In Claude: **Settings → Connectors → Add custom connector**, paste that URL, then ask Claude to "open Relay" or "send this to my phone". It works the same in other MCP Apps hosts.
+
+To host your own (for example in front of a self-hosted Relay server):
 
 ```sh
 PORT=8787 npx -y -p @byrishi/relay-mcp relay-mcp-http      # serves POST /mcp
