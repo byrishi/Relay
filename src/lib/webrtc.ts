@@ -76,6 +76,8 @@ const FLUSH_BYTES = 4 * 1024 * 1024;
 const ACK_INTERVAL_MS = 100;
 const TICK_MS = 250;
 const RECONNECT_GRACE_MS = 12000;
+/** How long a new connection may take to open before it is torn down and retried. */
+const OPEN_TIMEOUT_MS = 15000;
 
 // ── ICE servers: public STUN + TURN (short-lived creds from /api/turn, or static env) ──
 let turnCache: { servers: RTCIceServer[]; at: number } | null = null;
@@ -182,6 +184,7 @@ export class WebRTCManager {
   private pendingCandidates: RTCIceCandidateInit[] = [];
   private iceRestarts = 0;
   private graceTimer: ReturnType<typeof setTimeout> | null = null;
+  private openTimer: ReturnType<typeof setTimeout> | null = null;
   private closed = false;
   private open = false;
 
@@ -202,6 +205,9 @@ export class WebRTCManager {
     cleanupBrowserStorage();
     const pc = new RTCPeerConnection({ iceServers: this.iceServers, iceCandidatePoolSize: 4 });
     this.pc = pc;
+    // A first connection that never opens (e.g. ICE connects but the encrypted channel stalls)
+    // would otherwise wait forever. Give up so the initiator can start over with a fresh link.
+    this.openTimer = setTimeout(() => { this.openTimer = null; if (!this.open) this.teardown('failed'); }, OPEN_TIMEOUT_MS);
 
     pc.onicecandidate = (e) => {
       if (e.candidate) this.onSignal?.({ type: 'candidate', candidate: e.candidate.toJSON(), session: this.session });
@@ -762,6 +768,8 @@ export class WebRTCManager {
     this.closed = true;
     this.open = false;
     this.clearGrace();
+    if (this.openTimer) clearTimeout(this.openTimer);
+    this.openTimer = null;
     const explicit = reason === 'closed';
 
     for (const t of this.outgoing.values()) {

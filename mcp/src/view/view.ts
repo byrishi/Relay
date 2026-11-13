@@ -32,7 +32,15 @@ const diag = {
   gathering: '',
   ice: '',
   conn: '',
+  mdns: 0,
+  iceErrors: [] as string[],
+  csp: [] as string[],
 };
+// The host's Content Security Policy can block requests or features; note what it blocks.
+addEventListener('securitypolicyviolation', (e: SecurityPolicyViolationEvent) => {
+  const v = `${e.effectiveDirective || e.violatedDirective} ${String(e.blockedURI || '').slice(0, 60)}`.trim();
+  if (diag.csp.length < 8 && !diag.csp.includes(v)) { diag.csp.push(v); schedule(); }
+});
 const NativePC = (globalThis as any).RTCPeerConnection;
 if (NativePC) {
   class TrackedPC extends NativePC {
@@ -40,13 +48,19 @@ if (NativePC) {
       try { super(cfg); } catch (e: any) { diag.error = e?.message || String(e); schedule(); throw e; }
       const pc = this as unknown as RTCPeerConnection;
       pc.addEventListener('icecandidate', (e: any) => {
-        const t = / typ (\w+)/.exec(e.candidate?.candidate || '')?.[1];
+        const c = e.candidate?.candidate || '';
+        const t = / typ (\w+)/.exec(c)?.[1];
         if (t) diag.local[t] = (diag.local[t] || 0) + 1;
+        if (/\.local /.test(c)) diag.mdns++;
         schedule();
       });
       pc.addEventListener('icegatheringstatechange', () => { diag.gathering = pc.iceGatheringState; schedule(); });
       pc.addEventListener('iceconnectionstatechange', () => { diag.ice = pc.iceConnectionState; schedule(); });
       pc.addEventListener('connectionstatechange', () => { diag.conn = pc.connectionState; schedule(); });
+      pc.addEventListener('icecandidateerror', (e: any) => {
+        const v = `${e.errorCode || ''} ${String(e.url || '').replace(/\?.*$/, '')}`.trim();
+        if (diag.iceErrors.length < 6 && !diag.iceErrors.includes(v)) diag.iceErrors.push(v);
+      });
     }
     addIceCandidate(...args: any[]) { diag.remote++; schedule(); return (super.addIceCandidate as any)(...args); }
   }
@@ -140,6 +154,25 @@ function pickFiles() {
   input.click();
 }
 
+// ── anonymous connection report ─────────────────────────────────────────────
+// When a connection fails (or finally works), send the counts above to the Relay server so
+// connection problems inside chat apps can be fixed. No addresses, names or file details.
+const sent = new Set<string>();
+function report() {
+  const failed = room.state === 'connecting' && (diag.ice === 'failed' || diag.conn === 'failed');
+  const kind = room.state === 'connected' ? 'connected' : failed ? 'failed' : slow() ? 'slow' : room.state === 'error' ? 'error' : '';
+  if (!kind || sent.has(kind)) return;
+  sent.add(kind);
+  const body = JSON.stringify({
+    kind, v: 2, ua: navigator.userAgent.slice(0, 200), secure: !!globalThis.isSecureContext,
+    online: room.online, webrtc: diag.webrtc, error: diag.error || room.error, local: diag.local, mdns: diag.mdns,
+    remote: diag.remote, gathering: diag.gathering, ice: diag.ice, conn: diag.conn,
+    iceErrors: diag.iceErrors, csp: diag.csp, route: room.route?.route || '',
+    ms: room.joinedAt ? Date.now() - room.joinedAt : 0,
+  });
+  fetch(`${room.server}/api/diag`, { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
+}
+
 // ── render ───────────────────────────────────────────────────────────────────
 const slow = () => room.state === 'connecting' && room.joinedAt > 0 && Date.now() - room.joinedAt > SLOW_MS;
 
@@ -181,7 +214,7 @@ async function render() {
     $('#joining-hint').textContent = slow()
       ? (diag.webrtc !== 'available' || diag.error
         ? 'This chat app blocks direct connections. Open Relay in a browser tab instead.'
-        : 'Check that both devices are online. Some networks block direct connections. Open “Connection details” below and share them if it keeps failing.')
+        : 'Some networks and chat apps block direct connections. Open Relay in a browser tab on this device and your phone will connect to that instead.')
       : 'Setting up an encrypted, direct connection.';
     $('#joining-open').hidden = !slow();
     if (slow()) ($('#diag') as HTMLDetailsElement).open = true;
@@ -194,7 +227,10 @@ async function render() {
     `WebRTC: ${diag.webrtc}${diag.error ? ` · error: ${diag.error}` : ''}`,
     `Candidates here: host ${L.host || 0} · srflx ${L.srflx || 0} · relay ${L.relay || 0}${L.prflx ? ` · prflx ${L.prflx}` : ''} · from other device: ${diag.remote}`,
     `ICE: gathering ${diag.gathering || '—'} · ${diag.ice || '—'} · connection ${diag.conn || '—'}`,
+    ...(diag.iceErrors.length ? [`ICE errors: ${diag.iceErrors.join(', ')}`] : []),
+    ...(diag.csp.length ? [`Blocked by the host: ${diag.csp.join(', ')}`] : []),
   ].join('\n');
+  report();
   $('#peer').hidden = !room.connected;
 
   if (room.code && qrFor !== room.link) {
@@ -248,7 +284,12 @@ async function render() {
 }
 
 $('#add').onclick = pickFiles;
-$('#joining-open').onclick = () => { if (room.link) app.openLink({ url: room.server }).catch(() => window.open(room.server, '_blank')); };
+// Open the same room in a normal browser tab on this device; the phone connects to that tab directly.
+$('#joining-open').onclick = () => {
+  if (!room.link) return;
+  const url = room.link;
+  app.openLink({ url }).catch(() => window.open(url, '_blank'));
+};
 $('#close').onclick = () => { room.stop(); render(); };
 render();
 
