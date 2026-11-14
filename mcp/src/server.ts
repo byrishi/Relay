@@ -69,6 +69,7 @@ export async function buildServer(opts: BuildOptions = {}) {
         mime_type: z.string().max(100).optional(),
       })).max(20).optional().describe('Text files to offer to the phone'),
     },
+    annotations: { title: 'Open Relay', readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     _meta: { ui: { resourceUri: APP_URI } },
   }, async ({ files }) => {
     const size = (files || []).reduce((a, f) => a + new TextEncoder().encode(f.content).byteLength, 0);
