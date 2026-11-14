@@ -173,6 +173,42 @@ function report() {
   fetch(`${room.server}/api/diag`, { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
 }
 
+// ── brand: pixel R mark and QR code in the Relay style ──────────────────────
+const SVGNS = 'http://www.w3.org/2000/svg';
+const R_CELLS = [[0,0],[1,0],[2,0],[3,0],[0,1],[4,1],[0,2],[4,2],[0,3],[1,3],[2,3],[3,3],[0,4],[2,4],[0,5],[3,5],[0,6],[4,6]];
+const markSvg = (ink: string, packet: string, gap = 0.14) =>
+  R_CELLS.map(([x, y]) => `<rect x="${x + gap / 2}" y="${y + gap / 2}" width="${1 - gap}" height="${1 - gap}" fill="${ink}"/>`).join('') +
+  `<rect x="${5 + gap / 2}" y="${gap / 2}" width="${1 - gap}" height="${1 - gap}" fill="${packet}"/>`;
+$('#mark').innerHTML = markSvg('var(--signal)', '#8FA0FF');
+
+/** Square ink modules, finder eyes with a blue core, the pixel R in the middle (ECC H). */
+function relayQR(value: string) {
+  const qr = QRCode.create(value, { errorCorrectionLevel: 'H' });
+  const n = qr.modules.size, data = qr.modules.data;
+  const quiet = 3, total = n + quiet * 2;
+  const hole = Math.max(7, Math.round(n * 0.22) | 1);
+  const h0 = (n - hole) / 2, h1 = h0 + hole;
+  const eye = (x: number, y: number) => (x < 7 && y < 7) || (x >= n - 7 && y < 7) || (x < 7 && y >= n - 7);
+  let cells = '';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (eye(x, y) || (x >= h0 - 0.5 && x < h1 && y >= h0 - 0.5 && y < h1)) continue;
+    if (data[y * n + x]) cells += `M${x + 0.04} ${y + 0.04}h.92v.92h-.92z`;
+  }
+  const eyes = [[0, 0], [n - 7, 0], [0, n - 7]];
+  const q = quiet, t = (a: number) => a.toFixed(2);
+  const ticks = [
+    `M${t(-q + 0.6)} ${t(-q + 2)}V${t(-q + 0.6)}H${t(-q + 2)}`, `M${t(n + q - 2)} ${t(-q + 0.6)}H${t(n + q - 0.6)}V${t(-q + 2)}`,
+    `M${t(-q + 0.6)} ${t(n + q - 2)}V${t(n + q - 0.6)}H${t(-q + 2)}`, `M${t(n + q - 2)} ${t(n + q - 0.6)}H${t(n + q - 0.6)}V${t(n + q - 2)}`,
+  ].join('');
+  const m = hole * 0.62, mx = h0 + (hole - m * 6 / 7) / 2, my = h0 + (hole - m) / 2;
+  return `<svg xmlns="${SVGNS}" viewBox="${-q} ${-q} ${total} ${total}" shape-rendering="crispEdges" aria-hidden="true">` +
+    `<rect x="${-q}" y="${-q}" width="${total}" height="${total}" fill="#fff"/>` +
+    `<path fill="#0E1233" d="${cells}"/>` +
+    eyes.map(([x, y]) => `<path fill="#0E1233" fill-rule="evenodd" d="M${x} ${y}h7v7h-7z M${x + 1} ${y + 1}v5h5v-5z"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="#1631E0"/>`).join('') +
+    `<path fill="none" stroke="#0E1233" stroke-width=".25" d="${ticks}"/>` +
+    `<g transform="translate(${mx} ${my}) scale(${m / 7})">${markSvg('#1631E0', '#8FA0FF')}</g></svg>`;
+}
+
 // ── render ───────────────────────────────────────────────────────────────────
 const slow = () => room.state === 'connecting' && room.joinedAt > 0 && Date.now() - room.joinedAt > SLOW_MS;
 
@@ -204,13 +240,17 @@ function itemLabel(it: Item) {
   }
 }
 
-async function render() {
+function render() {
   $('#status').textContent = statusText();
   $('#status').dataset.state = fatal ? 'error' : room.state;
-  $('#join').hidden = room.state !== 'waiting' || !room.code;
-  $('#joining').hidden = room.state !== 'connecting';
+  const down = !!fatal || room.state === 'stopped' || room.state === 'error';
+  $('#opening').hidden = down || room.state !== 'starting';
+  $('#join').hidden = down || room.state !== 'waiting' || !room.code;
+  $('#joining').hidden = down || room.state !== 'connecting';
+  $('#failed').hidden = !down;
+  if (down) $('#failed-text').textContent = room.state === 'stopped' ? 'Start over to get a new code.' : (fatal || room.error || 'Something went wrong.') + ' Start over to try again.';
   if (room.state === 'connecting') {
-    $('#joining-title').textContent = slow() ? `${room.peerName} joined, but a direct connection didn't form` : `${room.peerName} joined. Connecting…`;
+    $('#joining-title').textContent = slow() ? 'Can\'t connect directly' : `${room.peerName} joined`;
     $('#joining-hint').textContent = slow()
       ? (diag.webrtc !== 'available' || diag.error
         ? 'This chat app blocks direct connections. Open Relay in a browser tab instead.'
@@ -231,12 +271,12 @@ async function render() {
     ...(diag.csp.length ? [`Blocked by the host: ${diag.csp.join(', ')}`] : []),
   ].join('\n');
   report();
-  $('#peer').hidden = !room.connected;
+  $('#peer').hidden = down || !room.connected;
 
   if (room.code && qrFor !== room.link) {
     qrFor = room.link;
     $('#code').textContent = room.code;
-    ($('#qr') as HTMLImageElement).src = await QRCode.toDataURL(room.link, { margin: 1, width: 280, color: { dark: '#0E1233', light: '#FFFFFF' } });
+    $('#qr').innerHTML = relayQR(room.link);
     $('#host').textContent = room.server.replace(/^https?:\/\//, '');
   }
   if (room.connected) {
@@ -263,16 +303,16 @@ async function render() {
     row.append(icon, main);
     const actions = el('div', 'actions');
     if (it.direction === 'receive' && it.status === 'completed' && it.blob) {
-      const s = el('button', 'btn', 'Save');
+      const s = el('button', 'btn btn-line', 'Save');
       s.onclick = () => save(it);
       actions.append(s);
       if (canAddToChat(it) && !added.has(it.id)) {
-        const c = el('button', 'btn primary', 'Add to chat');
+        const c = el('button', 'btn btn-signal', 'Add to chat');
         c.onclick = () => addToChat(it);
         actions.append(c);
       }
     } else if (!isTerminal(it.status) && it.status !== 'waiting') {
-      const x = el('button', 'btn ghost', 'Cancel');
+      const x = el('button', 'btn btn-ghost', 'Cancel');
       x.onclick = () => room.cancel(it.id);
       actions.append(x);
     }
@@ -280,10 +320,25 @@ async function render() {
     list.append(row);
   }
   $('#empty').hidden = room.items.length > 0 || !room.connected;
-  ($('#add') as HTMLButtonElement).disabled = room.state === 'stopped' || room.state === 'error';
+  ($('#add') as HTMLButtonElement).disabled = down;
+  $('#add').hidden = room.connected; // the card has its own Add files button then
 }
 
 $('#add').onclick = pickFiles;
+$('#add2').onclick = pickFiles;
+// Start over with a new code: disconnects the other device, keeps unsent files queued.
+document.querySelectorAll<HTMLButtonElement>('.js-new').forEach((b) => { b.onclick = () => { fatal = ''; qrFor = ''; sent.clear(); room.newCode(); render(); }; });
+$('#copy').onclick = async () => {
+  const b = $('#copy');
+  let ok = false;
+  try { await navigator.clipboard.writeText(room.link); ok = true; } catch { /* the host may block clipboard access */ }
+  if (!ok) { // select the code so it can be copied by hand
+    const r = document.createRange(); r.selectNodeContents($('#code'));
+    const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r);
+  }
+  b.textContent = ok ? 'Copied' : 'Code selected';
+  setTimeout(() => { b.textContent = 'Copy link'; }, 2000);
+};
 // Open the same room in a normal browser tab on this device; the phone connects to that tab directly.
 $('#joining-open').onclick = () => {
   if (!room.link) return;

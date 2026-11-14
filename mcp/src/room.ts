@@ -189,6 +189,35 @@ export class RelayRoom {
 
   cancel(id: string) { this.manager?.manageTransfer(id, 'cancel'); }
 
+  /**
+   * Start over with a new room code. The other device (if any) is disconnected; files still
+   * waiting to be sent stay queued for whoever joins the new room.
+   */
+  newCode() {
+    if (!this.socket) return;
+    clearTimeout(this.reconnectTimer);
+    const m = this.manager;
+    this.manager = undefined;
+    // detach first, so closing the old link doesn't mark queued files cancelled
+    if (m) { m.onDisconnect = undefined; m.onTransferUpdate = undefined; m.close(); }
+    for (const it of this.items) {
+      if (isTerminal(it.status)) continue;
+      if (it.direction === 'send') { it.status = 'waiting'; it.bytes = 0; it.speed = 0; it.error = undefined; }
+      else { it.status = 'cancelled'; it.speed = 0; }
+    }
+    this.peer = undefined;
+    this.peerName = '';
+    this.safety = '';
+    this.route = undefined;
+    this.joinedAt = 0;
+    this.code = '';
+    this.error = '';
+    this.set('starting');
+    // create_room leaves the old room; after stop() the socket reconnects and opens one on connect
+    if (this.socket.connected) this.socket.emit('create_room', { deviceName: this.deviceName, session: this.pageSession });
+    else this.socket.connect();
+  }
+
   /** Resolves on the next change (or after timeoutMs). */
   waitForChange(timeoutMs: number): Promise<void> {
     return new Promise((res) => {

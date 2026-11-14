@@ -4,87 +4,155 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Relay</title>
+<style>/*__FONTS__*/</style>
 <style>
-:root{--bg:#FFFFFF;--ink:#0E1233;--sub:#575C80;--line:#E3E5EE;--soft:#F2F3F7;--blue:#1631E0;--blue-ink:#FFFFFF;--green:#12B76A;--red:#C4320A;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B0D1C;--ink:#EEF0FA;--sub:#A3A8C2;--line:#262A44;--soft:#141831;--blue:#3D57FF;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0B0D1C;--ink:#EEF0FA;--sub:#A3A8C2;--line:#262A44;--soft:#141831;--blue:#3D57FF;color-scheme:dark}
+/* Relay's own design language (relay.rishishah.in): cool paper, one ultramarine, the blue "device" card. */
+:root{
+  --sans:"Apfel Grotezk",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Aujournuit","Apfel Grotezk",ui-serif,Georgia,serif;
+  --mono:"Departure Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --bg:#F2F3F7;--paper:#FFFFFF;--ink:#0E1233;--ink-2:#393E63;--ink-3:#575C80;
+  --line:rgb(22 49 224 / .16);--signal:#1631E0;--pale:#DCE1FF;--ok:#127A3E;--danger:#B3261E;
+  --dev:#1631E0;--dev-2:#2440EA;--dev-3:#3550F2;--dev-line:rgb(255 255 255 / .2);--dev-fg-2:#D3D9FF;
+  color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B0D1C;--paper:#141831;--ink:#EEF0FA;--ink-2:#C9CDE3;--ink-3:#A3A8C2;--line:rgb(143 160 255 / .22);--signal:#8FA0FF;--ok:#9CF5BC;--danger:#FFC2BB;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B0D1C;--paper:#141831;--ink:#EEF0FA;--ink-2:#C9CDE3;--ink-3:#A3A8C2;--line:rgb(143 160 255 / .22);--signal:#8FA0FF;--ok:#9CF5BC;--danger:#FFC2BB;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:640px}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.wrap{padding:14px;display:flex;flex-direction:column;gap:12px;max-width:760px}
+
 header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:-.01em}
-.mark{display:grid;grid-template-columns:repeat(6,3px);grid-template-rows:repeat(7,3px);gap:1px}
-.mark i{background:var(--blue)}.mark i.a{background:#8FA0FF}
-#status{font-size:12.5px;color:var(--sub);background:var(--soft);border-radius:99px;padding:5px 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
-#status[data-state="connected"]{color:#fff;background:var(--green)}
-#status[data-state="error"]{color:#fff;background:var(--red)}
-#join{display:flex;gap:18px;align-items:center;background:var(--soft);border-radius:16px;padding:14px}
-#qr{width:140px;height:140px;border-radius:10px;background:#fff;flex-shrink:0;image-rendering:pixelated}
-.join-text{display:flex;flex-direction:column;gap:6px;min-width:0}
-.join-text h2{margin:0;font-size:17px;font-weight:600}
-#code{font-family:var(--mono);font-size:19px;letter-spacing:.02em;color:var(--blue);word-break:break-all}
-.hint{font-size:12.5px;color:var(--sub)}
-#peer{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;font-size:12.5px;color:var(--sub)}
-#peer b{color:var(--ink);font-weight:600}
-#safety{font-family:var(--mono);color:var(--ink);letter-spacing:.04em}
+.brand{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:20px;letter-spacing:-.03em;line-height:1}
+.brand svg{height:19px;width:auto}
+#status{font-size:13px;font-weight:500;color:var(--ink-2);background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--line);border-radius:999px;padding:6px 12px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62%}
+#status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--signal);flex-shrink:0;animation:blink 1.6s ease-in-out infinite}
+#status[data-state="connected"]::before{background:#12B76A;animation:none}
+#status[data-state="error"]::before,#status[data-state="stopped"]::before{background:var(--danger);animation:none}
+
+.device{background:var(--dev);color:#fff;border-radius:24px;overflow:hidden}
+.head{padding:22px 22px 14px}
+.display{font-family:var(--display);font-weight:400;line-height:.92;letter-spacing:-.01em;font-variation-settings:"wdth" 3.4;margin:0;font-size:clamp(34px,7.5vw,52px)}
+.sub{margin:10px 0 0;color:var(--dev-fg-2);font-size:15px;max-width:44ch}
+.sub b{color:#fff;font-weight:500}
+.grid{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px}
+.qrbox{background:#fff;border-radius:18px;padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+#qr{width:188px;height:188px;display:block}
+#qr svg{width:100%;height:100%;display:block}
+.qrbox p{margin:0;font-size:12.5px;color:#575C80}
+.codebox{background:var(--dev-2);border-radius:18px;padding:18px;display:flex;flex-direction:column;min-width:0}
+.lbl{margin:0;color:var(--dev-fg-2);font-size:14px}
+#code{font-family:var(--mono);font-size:clamp(20px,4.4vw,27px);margin:4px 0 0;word-break:break-all;user-select:all}
+.keys{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.key{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:44px;padding:0 18px;border-radius:999px;font-weight:500;font-size:15px;white-space:nowrap;transition:transform .08s,background-color .15s,box-shadow .15s}
+.key:active{transform:scale(.97)}
+.key:disabled{opacity:.45;pointer-events:none}
+.key-light{background:#fff;color:#1631E0}.key-light:hover{background:#DCE1FF}
+.key-dark{box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45);color:#fff}.key-dark:hover{background:var(--dev-3)}
+.key svg{width:17px;height:17px}
+.fine{margin:auto 0 0;padding-top:14px;font-size:12.5px;color:var(--dev-fg-2)}
+.pad{padding:0 22px 22px}
+.meta{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:12px;color:var(--dev-fg-2);font-size:14px}
+.meta b{color:#fff;font-weight:500}
+#safety{font-family:var(--mono);color:#fff;letter-spacing:.02em}
+
 #items{display:flex;flex-direction:column;gap:8px}
-.item{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.dir{width:28px;height:28px;border-radius:8px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue);flex-shrink:0}
+.item{display:flex;gap:12px;align-items:center;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);border-radius:16px;padding:11px 12px}
+.dir{width:34px;height:34px;border-radius:10px;background:var(--pale);color:#1631E0;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+:root[data-theme="dark"] .dir{background:#1D2350;color:#8FA0FF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dir{background:#1D2350;color:#8FA0FF}}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
 .top{display:flex;justify-content:space-between;gap:8px}
 .name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.size{color:var(--sub);font-size:12.5px;white-space:nowrap}
-.bar{height:4px;border-radius:2px;background:var(--soft);overflow:hidden}.bar i{display:block;height:100%;background:var(--blue);transition:width .2s}
-.completed .bar i{background:var(--green)}.failed .bar i,.declined .bar i{background:var(--red)}
-.label{font-size:12px;color:var(--sub)}
+.size{color:var(--ink-3);font-size:13px;white-space:nowrap;font-family:var(--mono)}
+.bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--signal);transition:width .2s}
+.completed .bar i{background:#12B76A}.failed .bar i,.declined .bar i{background:var(--danger)}
+.label{font-size:12.5px;color:var(--ink-3)}
 .actions{display:flex;gap:6px;flex-shrink:0}
-.btn{font:inherit;font-size:13px;font-weight:500;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 14px;cursor:pointer;min-height:34px}
-.btn:hover{border-color:var(--sub)}.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
-.btn.ghost{border-color:transparent;color:var(--sub)}
-.btn:disabled{opacity:.5;cursor:default}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 15px;border-radius:999px;font-weight:500;font-size:14px;white-space:nowrap;transition:background-color .15s,color .15s}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn-signal{background:#1631E0;color:#fff}.btn-signal:hover{background:#0E1233}
+.btn-line{box-shadow:inset 0 0 0 1.5px var(--signal);color:var(--signal)}.btn-line:hover{background:var(--signal);color:var(--paper)}
+.btn-ghost{color:var(--ink-3)}.btn-ghost:hover{color:var(--danger)}
+#empty{font-size:14px;color:var(--ink-3);text-align:center;padding:4px 0}
 footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.note{font-size:12px;color:var(--sub)}
-#joining{background:var(--soft);border-radius:16px;padding:14px}
-#joining h2{margin:0 0 4px;font-size:16px;font-weight:600}
-#diag{font-size:12px;color:var(--sub)}#diag summary{cursor:pointer}
-#diag pre{margin:8px 0 0;white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;line-height:1.5;color:var(--ink);background:var(--soft);border-radius:10px;padding:10px}
-#empty{font-size:13px;color:var(--sub);text-align:center;padding:6px 0}
-@media (max-width:420px){#join{flex-direction:column;align-items:flex-start}#qr{width:120px;height:120px}}
+.note{font-size:13px;color:var(--ink-3);display:inline-flex;align-items:center;gap:6px}
+.acts{display:flex;gap:6px}
+#diag{font-size:12.5px;color:var(--ink-3)}#diag summary{cursor:pointer;width:max-content}
+#diag pre{margin:8px 0 0;white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--ink-2);background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);border-radius:12px;padding:10px 12px}
+.blink{animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.blink,#status::before{animation:none}}
+@media (max-width:520px){.grid{grid-template-columns:1fr}#qr{width:200px;height:200px}.head{padding:20px 18px 12px}.pad{padding:0 18px 18px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand"><span class="mark" aria-hidden="true"><i style="grid-area:1/1"></i><i style="grid-area:1/2"></i><i style="grid-area:1/3"></i><i style="grid-area:1/4"></i><i class="a" style="grid-area:1/6"></i><i style="grid-area:2/1"></i><i style="grid-area:2/5"></i><i style="grid-area:3/1"></i><i style="grid-area:3/5"></i><i style="grid-area:4/1"></i><i style="grid-area:4/2"></i><i style="grid-area:4/3"></i><i style="grid-area:4/4"></i><i style="grid-area:5/1"></i><i style="grid-area:5/3"></i><i style="grid-area:6/1"></i><i style="grid-area:6/4"></i><i style="grid-area:7/1"></i><i style="grid-area:7/5"></i></span>Relay</div>
+    <span class="brand"><svg viewBox="0 0 6 7" aria-hidden="true" shape-rendering="crispEdges" id="mark"></svg>Relay</span>
     <span id="status" role="status">Opening a room…</span>
   </header>
-  <section id="join" hidden>
-    <img id="qr" alt="QR code to join from your phone">
-    <div class="join-text">
-      <h2>Scan with your phone</h2>
-      <div class="hint">Or open <span id="host">relay.rishishah.in</span> and enter</div>
-      <div id="code"></div>
-      <div class="hint">Files go straight between this device and your phone. Nothing is uploaded.</div>
+
+  <section class="device" aria-live="polite">
+    <div id="opening">
+      <div class="head"><h1 class="display blink">Making a code…</h1><p class="sub">One moment.</p></div>
+    </div>
+
+    <div id="join" hidden>
+      <div class="head">
+        <h1 class="display">Connect your phone</h1>
+        <p class="sub">Scan the QR code, or open <b id="host">relay.rishishah.in</b> on your phone and enter the code.</p>
+      </div>
+      <div class="grid">
+        <div class="qrbox"><div id="qr" role="img" aria-label="QR code that opens Relay on your phone"></div><p>Point your phone's camera here</p></div>
+        <div class="codebox">
+          <p class="lbl">Room code</p>
+          <p id="code"></p>
+          <div class="keys">
+            <button class="key key-light" id="copy" type="button">Copy link</button>
+            <button class="key key-dark js-new" type="button">New code</button>
+          </div>
+          <p class="fine">Files go straight between this device and your phone. Nothing is uploaded.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="joining" hidden>
+      <div class="head"><h1 class="display" id="joining-title"></h1><p class="sub" id="joining-hint"></p></div>
+      <div class="pad keys" style="margin-top:0">
+        <button class="key key-light" id="joining-open" type="button" hidden>Open Relay in a browser</button>
+        <button class="key key-dark js-new" type="button">New code</button>
+      </div>
+    </div>
+
+    <div id="peer" hidden>
+      <div class="head">
+        <p class="lbl">Connected to</p>
+        <h1 class="display" id="peer-name" style="margin-top:6px"></h1>
+        <div class="meta"><span>Safety number <span id="safety"></span></span><span id="route"></span></div>
+      </div>
+      <div class="pad keys" style="margin-top:0">
+        <button class="key key-light" id="add2" type="button">Add files</button>
+        <button class="key key-dark js-new" type="button">New code</button>
+      </div>
+    </div>
+
+    <div id="failed" hidden>
+      <div class="head"><h1 class="display">Relay closed</h1><p class="sub" id="failed-text"></p></div>
+      <div class="pad keys" style="margin-top:0"><button class="key key-light js-new" type="button">Start over</button></div>
     </div>
   </section>
-  <section id="joining" hidden>
-    <div class="join-text">
-      <h2 id="joining-title"></h2>
-      <div class="hint" id="joining-hint"></div>
-      <div><button class="btn" id="joining-open" type="button" hidden>Open Relay in a browser</button></div>
-    </div>
-  </section>
-  <section id="peer" hidden><span>Connected to <b id="peer-name"></b></span><span>Safety number <span id="safety"></span></span><span id="route"></span></section>
+
   <section id="items" aria-live="polite"></section>
   <div id="empty" hidden>Send something from your phone, or add files from this device.</div>
-  <details id="diag"><summary>Connection details</summary><pre id="diag-body"></pre></details>
+
   <footer>
     <span class="note">End-to-end encrypted · peer to peer</span>
-    <span class="actions"><button class="btn" id="add" type="button">Add files</button><button class="btn ghost" id="close" type="button">Close</button></span>
+    <span class="acts"><button class="btn btn-line" id="add" type="button">Add files</button><button class="btn btn-ghost" id="close" type="button">Close</button></span>
   </footer>
+  <details id="diag"><summary>Connection details</summary><pre id="diag-body"></pre></details>
 </div>
 <script>/*__RELAY_CONFIG__*/</script>
 <script>/*__VIEW_JS__*/</script>
